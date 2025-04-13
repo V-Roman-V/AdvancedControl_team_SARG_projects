@@ -16,6 +16,7 @@ class Simulation():
         self.desired_trajectory = []
         
         # visualizer
+        self.gif_path = "simulation.gif"
         self.frame_numbers = 100
         self.update_vis_every_n_frame = len(self.time) // self.frame_numbers 
         self.visualizer: BoatVisualizer = None
@@ -59,7 +60,7 @@ class Simulation():
             self.control_history.append(control_input.copy())
             if i % self.update_vis_every_n_frame == 0:
                 self.visualizer.update(self.trajectory, current_step=t, controls=self.control_history[-1])
-        self.visualizer.finalize(self.trajectory, save_path='simulation.gif')
+        self.visualizer.finalize(self.trajectory, save_path=self.gif_path)
 
 def main():
     """
@@ -67,7 +68,7 @@ def main():
     """
     T = 50
     dt = 0.01
-    sim = Simulation(T, dt, 'realtime')  # 'gif', 'realtime', 'final'
+    sim = Simulation(T, dt, 'gif')  # 'gif', 'realtime', 'final'
 
     # Initial and desired states: [x, y, psi, Vx, Vy, omega]
     init_state = [0, 0, 0, 0, 0, 0]

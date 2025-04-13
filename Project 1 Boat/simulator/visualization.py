@@ -102,7 +102,7 @@ class BoatVisualizer:
         self.ax.add_patch(right_t_patch)
 
         # update title
-        self.ax.set_title(f'Boat Trajectory Tracking, t = {current_step}')
+        self.ax.set_title(f'Boat Trajectory Control, t = {current_step}')
         
         # Update trajectory line
         if not self.trajectory_line:
