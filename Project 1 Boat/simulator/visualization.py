@@ -1,11 +1,13 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.patches import Polygon
-from matplotlib.lines import Line2D
 import imageio
+from matplotlib.cm import ScalarMappable
+from matplotlib.colors import Normalize
+
 
 class BoatVisualizer:
-    def __init__(self, mode='realtime', desired_trajectory=None):
+    def __init__(self, mode='realtime', desired_trajectory=None, control_limit=10):
         """
         Initialize boat trajectory visualizer.
         
@@ -15,12 +17,14 @@ class BoatVisualizer:
         - 'gif': Save animation as GIF
         """
         self.mode = mode
-        self.fig, self.ax = plt.subplots(figsize=(10, 6))
+        self.fig, self.ax = plt.subplots(figsize=(8, 6))
         self.boat_patch = None
         self.trajectory_line = None
         self.desired_traj_line = None
+        self.thruster_patches = []
         self.frames = []
         self.desired_traj = np.array(desired_trajectory)
+        self.control_limit = control_limit
         
         # Initialize plot
         self.ax.set_title('Boat Trajectory Tracking')
@@ -28,37 +32,74 @@ class BoatVisualizer:
         self.ax.set_ylabel('Y Position')
         self.ax.grid(True)
         self.ax.axis('equal')
+        self.ax.set_aspect('equal', adjustable='box')  # Set equal aspect ratio
+        
+        # Add colorbar for thrust visualization
+        self.norm = Normalize(vmin=-control_limit, vmax=control_limit)
+        self.cmap = plt.cm.coolwarm
+        self.sm = ScalarMappable(norm=self.norm, cmap=self.cmap)
+        self.fig.colorbar(self.sm, ax=self.ax, label='Thruster Force (N)')
 
         if self.mode == 'realtime':
             plt.ion()
             plt.show()
 
-    def _create_boat_triangle(self, x, y, psi, size = 0.5):
-        """Create triangle patch representing the boat"""
+    def _create_boat_triangle(self, x, y, psi, controls, size = 0.5):
+        """Create triangle patch representing the boat with thrusters"""
+        # Main boat triangle
         points = np.array([[-size, -size], [size*2, 0], [-size, size]]).T
         rotation = np.array([[np.cos(psi), -np.sin(psi)],
                             [np.sin(psi), np.cos(psi)]])
         rotated_points = np.dot(rotation, points).T + [x, y]
-        return Polygon(rotated_points, closed=True, color='blue', alpha=0.8)
+        
+        # Thruster positions (at the back of the boat)
+        offset = size * 1.2
+        left_thruster_pos = np.dot(rotation, [-offset, -size*0.7]) + [x, y]
+        right_thruster_pos = np.dot(rotation, [-offset, size*0.7]) + [x, y]
+        left_thruster_points = self.__get_thruster(left_thruster_pos, rotation, controls[0], size)
+        right_thruster_points = self.__get_thruster(right_thruster_pos, rotation, controls[1], size)
 
-    def update(self, trajectory, current_step):
-        """Update visualization with current state"""
-        # Clear previous boat position
+        return (
+            Polygon(rotated_points, closed=True, color='blue', alpha=0.8),
+            Polygon(left_thruster_points, closed=True, color=self.cmap(self.norm(controls[0])), alpha=0.8),
+            Polygon(right_thruster_points, closed=True, color=self.cmap(self.norm(controls[1])), alpha=0.8),
+        )
+
+    def __get_thruster(self, pos, rotation, control, size):
+        width_size = size * 0.35
+        length_size = abs(control) / self.control_limit * size * 1
+        points = np.array([[0,-1], [-1,-1], [-1,1], [0, 1]]) * np.array([length_size, width_size])
+        rotated_points = np.dot(rotation, points.T).T + pos
+        return rotated_points
+
+    def update(self, trajectory, current_step, controls):
+        """Update visualization with current state and controls"""
+        # Clear previous boat and thrusters
         if self.boat_patch:
             self.boat_patch.remove()
+        for patch in self.thruster_patches:
+            patch.remove()
+        self.thruster_patches = []
             
         # Get current state
         x, y, psi = trajectory[-1][:3]
         
-        # Create new boat patch
+        # Auto-adjust boat size based on trajectory
         x_min = min(np.min(np.array(trajectory)[:,0]), np.min(self.desired_traj[:,0]))
         x_max = max(np.max(np.array(trajectory)[:,0]), np.max(self.desired_traj[:,0]))
         y_min = min(np.min(np.array(trajectory)[:,1]), np.min(self.desired_traj[:,1]))
         y_max = max(np.max(np.array(trajectory)[:,1]), np.max(self.desired_traj[:,1]))
         delta_max = max(y_max - y_min, x_max - x_min)
         boat_size = delta_max / 50
-        self.boat_patch = self._create_boat_triangle(x, y, psi, size=boat_size)
+
+        # Create new boat and thrusters
+        boat_patch, left_t_patch, right_t_patch = self._create_boat_triangle(x, y, psi, controls, size=boat_size)
+        self.boat_patch = boat_patch
+        self.thruster_patches.append(left_t_patch)
+        self.thruster_patches.append(right_t_patch)
         self.ax.add_patch(self.boat_patch)
+        self.ax.add_patch(left_t_patch)
+        self.ax.add_patch(right_t_patch)
 
         # update title
         self.ax.set_title(f'Boat Trajectory Tracking, t = {current_step}')

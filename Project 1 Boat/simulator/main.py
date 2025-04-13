@@ -39,7 +39,7 @@ class Simulation():
             k_p_omega=3.0,
             omega_max=1.2
         )
-
+        self.control_history = []
 
     def initialize(self, init_state, desired_trajectory):
         self.desired_trajectory = desired_trajectory
@@ -56,8 +56,9 @@ class Simulation():
             control_input = self.controller.compute_control(self.boat.state, desired_state)
             self.boat.update_state(control_input, self.dt)
             self.trajectory.append(self.boat.state.copy())
+            self.control_history.append(control_input.copy())
             if i % self.update_vis_every_n_frame == 0:
-                self.visualizer.update(self.trajectory, current_step=t)
+                self.visualizer.update(self.trajectory, current_step=t, controls=self.control_history[-1])
         self.visualizer.finalize(self.trajectory, save_path='simulation.gif')
 
 def main():
