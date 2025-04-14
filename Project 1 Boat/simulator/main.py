@@ -32,13 +32,7 @@ class Simulation():
             mass=self.mass,
             inertia=self.inertia,
             damping=self.damping,
-            control_limit=20.0,  # Increased for better maneuverability
-            k_p_pos=0.8,         # More aggressive position tracking
-            k_p_v=3.0,
-            Vx_max=2.5,
-            k_p_psi=0.8,        # Faster heading correction
-            k_p_omega=3.0,
-            omega_max=1.2
+            control_limit=20.0,
         )
         self.control_history = []
 
@@ -72,7 +66,7 @@ def main():
 
     # Initial and desired states: [x, y, psi, Vx, Vy, omega]
     init_state = [0, 0, 0, 0, 0, 0]
-    desired_state = np.array([4, 4, 1, 0, 0, 0])
+    desired_state = np.array([4, 4, 0, 0, 0, 0])
     sim.initialize(init_state, [desired_state])
     
     # start

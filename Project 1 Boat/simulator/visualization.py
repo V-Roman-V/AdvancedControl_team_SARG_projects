@@ -35,8 +35,8 @@ class BoatVisualizer:
         self.ax.set_aspect('equal', adjustable='box')  # Set equal aspect ratio
         
         # Add colorbar for thrust visualization
-        self.norm = Normalize(vmin=-control_limit, vmax=control_limit)
-        self.cmap = plt.cm.coolwarm
+        self.norm = Normalize(vmin=0, vmax=control_limit)
+        self.cmap = plt.cm.Reds
         self.sm = ScalarMappable(norm=self.norm, cmap=self.cmap)
         self.fig.colorbar(self.sm, ax=self.ax, label='Thruster Force (N)')
 
@@ -91,6 +91,10 @@ class BoatVisualizer:
         y_max = max(np.max(np.array(trajectory)[:,1]), np.max(self.desired_traj[:,1]))
         delta_max = max(y_max - y_min, x_max - x_min)
         boat_size = delta_max / 50
+
+        # Update axis range
+        self.ax.set_xlim((x_min - boat_size, x_max + boat_size))
+        self.ax.set_ylim((y_min - boat_size, y_max + boat_size))
 
         # Create new boat and thrusters
         boat_patch, left_t_patch, right_t_patch = self._create_boat_triangle(x, y, psi, controls, size=boat_size)
