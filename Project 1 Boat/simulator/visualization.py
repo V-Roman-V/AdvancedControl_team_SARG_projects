@@ -4,159 +4,165 @@ from matplotlib.patches import Polygon
 import imageio
 from matplotlib.cm import ScalarMappable
 from matplotlib.colors import Normalize
-
+from matplotlib.lines import Line2D
 
 class BoatVisualizer:
-    def __init__(self, mode='realtime', desired_trajectory=None, control_limit=10):
-        """
-        Initialize boat trajectory visualizer.
-        
-        Modes:
-        - 'realtime': Update visualization at each timestep
-        - 'final': Show only final result
-        - 'gif': Save animation as GIF
-        """
+    def __init__(self, mode='realtime', desired_trajectories=None, control_limits=None, boat_types=None):
         self.mode = mode
-        self.fig, self.ax = plt.subplots(figsize=(8, 6))
-        self.boat_patch = None
-        self.trajectory_line = None
-        self.desired_traj_line = None
-        self.thruster_patches = []
+        self.fig, self.ax = plt.subplots(figsize=(10, 8))
+        self.boat_patches = []
+        self.trajectory_lines = []
+        self.desired_traj_lines = []
         self.frames = []
-        self.desired_traj = np.array(desired_trajectory)
-        self.control_limit = control_limit
-        
-        # Initialize plot
-        self.ax.set_title('Boat Trajectory Tracking')
+        self.desired_trajs = [np.array(dt) for dt in desired_trajectories]
+        self.control_limits = control_limits
+        self.boat_types = boat_types
+        self.num_boats = len(boat_types)
+        self.colors = plt.cm.tab20c.colors
+
+        self.norms = {
+            'differential': Normalize(0, control_limits['differential']),
+            'steerable': Normalize(0, control_limits['steerable'][0])
+        }
+        self.cmap = plt.cm.Reds
+
+        self.ax.set_title('Multi-Boat Trajectory Tracking')
         self.ax.set_xlabel('X Position')
         self.ax.set_ylabel('Y Position')
         self.ax.grid(True)
         self.ax.axis('equal')
-        self.ax.set_aspect('equal', adjustable='box')  # Set equal aspect ratio
-        
-        # Add colorbar for thrust visualization
-        self.norm = Normalize(vmin=0, vmax=control_limit)
-        self.cmap = plt.cm.Reds
-        self.sm = ScalarMappable(norm=self.norm, cmap=self.cmap)
-        self.fig.colorbar(self.sm, ax=self.ax, label='Thruster Force (N)')
+        self.ax.set_aspect('equal', adjustable='box')
+
+        # for boat_type in set(boat_types):
+            # sm = ScalarMappable(norm=self.norms[boat_type], cmap=self.cmap)
+            # self.fig.colorbar(sm, ax=self.ax, label=f'{boat_type.capitalize()} Thrust (N)')
+
+        # Map one color to each boat type (first occurrence)
+        type_to_color = {}
+        for i, boat_type in enumerate(self.boat_types):
+            if boat_type not in type_to_color:
+                type_to_color[boat_type] = self.colors[i % len(self.colors)]
+
+        # Save for later use in finalize()
+        self.boat_type_legend_handles = [
+            Line2D([0], [0], color=type_to_color[btype], lw=4, label=f'{btype.capitalize()} Boat')
+            for btype in type_to_color
+        ]
 
         if self.mode == 'realtime':
             plt.ion()
             plt.show()
 
-    def _create_boat_triangle(self, x, y, psi, controls, size = 0.5):
-        """Create triangle patch representing the boat with thrusters"""
-        # Main boat triangle
+    def _create_boat_triangle(self, x, y, psi, size=0.3, color='blue'):
         points = np.array([[-size, -size], [size*2, 0], [-size, size]]).T
         rotation = np.array([[np.cos(psi), -np.sin(psi)],
-                            [np.sin(psi), np.cos(psi)]])
-        rotated_points = np.dot(rotation, points).T + [x, y]
-        
-        # Thruster positions (at the back of the boat)
-        offset = size * 1.2
-        left_thruster_pos = np.dot(rotation, [-offset, -size*0.7]) + [x, y]
-        right_thruster_pos = np.dot(rotation, [-offset, size*0.7]) + [x, y]
-        left_thruster_points = self.__get_thruster(left_thruster_pos, rotation, controls[0], size)
-        right_thruster_points = self.__get_thruster(right_thruster_pos, rotation, controls[1], size)
+                             [np.sin(psi),  np.cos(psi)]])
+        rotated_points = (rotation @ points).T + [x, y]
+        return Polygon(rotated_points, closed=True, color=color, alpha=0.8)
 
-        return (
-            Polygon(rotated_points, closed=True, color='blue', alpha=0.8),
-            Polygon(left_thruster_points, closed=True, color=self.cmap(self.norm(controls[0])), alpha=0.8),
-            Polygon(right_thruster_points, closed=True, color=self.cmap(self.norm(controls[1])), alpha=0.8),
-        )
-
-    def __get_thruster(self, pos, rotation, control, size):
-        width_size = size * 0.35
-        length_size = abs(control) / self.control_limit * size * 1
-        points = np.array([[0,-1], [-1,-1], [-1,1], [0, 1]]) * np.array([length_size, width_size])
-        rotated_points = np.dot(rotation, points.T).T + pos
-        return rotated_points
-
-    def update(self, trajectory, current_step, controls):
-        """Update visualization with current state and controls"""
-        # Clear previous boat and thrusters
-        if self.boat_patch:
-            self.boat_patch.remove()
-        for patch in self.thruster_patches:
+    def update(self, current_states, trajectories, current_step, controls):
+        for patch in self.boat_patches:
             patch.remove()
-        self.thruster_patches = []
-            
-        # Get current state
-        x, y, psi = trajectory[-1][:3]
-        
-        # Auto-adjust boat size based on trajectory
-        x_min = min(np.min(np.array(trajectory)[:,0]), np.min(self.desired_traj[:,0]))
-        x_max = max(np.max(np.array(trajectory)[:,0]), np.max(self.desired_traj[:,0]))
-        y_min = min(np.min(np.array(trajectory)[:,1]), np.min(self.desired_traj[:,1]))
-        y_max = max(np.max(np.array(trajectory)[:,1]), np.max(self.desired_traj[:,1]))
-        delta_max = max(y_max - y_min, x_max - x_min)
-        boat_size = delta_max / 50
+        self.boat_patches = []
 
-        # Update axis range
-        self.ax.set_xlim((x_min - boat_size, x_max + boat_size))
-        self.ax.set_ylim((y_min - boat_size, y_max + boat_size))
+        for i in range(self.num_boats):
+            x, y, psi = current_states[i]
+            boat_color = self.colors[i % len(self.colors)]
+            boat_patch = self._create_boat_triangle(x, y, psi, color=boat_color)
+            self.boat_patches.append(boat_patch)
+            self.ax.add_patch(boat_patch)
 
-        # Create new boat and thrusters
-        boat_patch, left_t_patch, right_t_patch = self._create_boat_triangle(x, y, psi, controls, size=boat_size)
-        self.boat_patch = boat_patch
-        self.thruster_patches.append(left_t_patch)
-        self.thruster_patches.append(right_t_patch)
-        self.ax.add_patch(self.boat_patch)
-        self.ax.add_patch(left_t_patch)
-        self.ax.add_patch(right_t_patch)
+        self._update_trajectories(trajectories)
 
-        # update title
-        self.ax.set_title(f'Boat Trajectory Control, t = {current_step}')
-        
-        # Update trajectory line
-        if not self.trajectory_line:
-            traj = np.array(trajectory)
-            self.trajectory_line, = self.ax.plot(traj[:,0], traj[:,1], 'b-', label='Actual Path')
-        else:
-            self.trajectory_line.set_data(np.array(trajectory)[:,:2].T)
-            
-        # Update desired trajectory
-        if self.desired_traj is not None and not self.desired_traj_line:
-            desired_points = np.array(self.desired_traj)
-            self.desired_traj_line, = self.ax.plot(
-                desired_points[:,0], desired_points[:,1], 
-                'r--', marker='o', markersize=4, label='Desired Path'
-            )
-            
-        # Handle different visualization modes
+        self.ax.set_title(f'Boat Trajectory Control, t = {current_step:.1f}s')
         if self.mode == 'realtime':
             self.fig.canvas.draw()
             self.fig.canvas.flush_events()
-            plt.pause(0.001)
+            # plt.pause(0.00001)
         elif self.mode == 'gif':
             self.fig.canvas.draw()
             image = np.frombuffer(self.fig.canvas.tostring_rgb(), dtype=np.uint8)
             image = image.reshape(self.fig.canvas.get_width_height()[::-1] + (3,))
             self.frames.append(image)
 
-    def finalize(self, trajectory, save_path=None):
-        """Finalize visualization and save if needed"""
-        if self.mode == 'final':
-            # Plot final result
-            traj = np.array(trajectory)
-            self.ax.plot(traj[:,0], traj[:,1], 'b-', label='Actual Path')
-            
-            if self.desired_traj is not None:
-                desired_points = np.array(self.desired_traj)
-                self.ax.plot(
-                    desired_points[:,0], desired_points[:,1], 
-                    'r--', marker='o', markersize=4, label='Desired Path'
+
+
+    def _update_trajectories(self, trajectories):
+        for i in range(self.num_boats):
+            traj = np.array(trajectories[i])
+            if len(self.trajectory_lines) <= i:
+                traj_line, = self.ax.plot([], [], ':', color=self.colors[i],
+                                          label=f'Boat {i+1} Path')
+                self.trajectory_lines.append(traj_line)
+            self.trajectory_lines[i].set_data(traj[:,0], traj[:,1])
+
+        for i, desired_traj in enumerate(self.desired_trajs):
+            if len(self.desired_traj_lines) <= i:
+                desired_line, = self.ax.plot(
+                    desired_traj[0], desired_traj[1], 'o',
+                    color=self.colors[i], label=f'Boat {i+1} Desired'
                 )
-            
-            self.ax.legend()
-            plt.show()
-            
-        elif self.mode == 'gif' and save_path:
-            # Save animation as GIF
-            print("Saving gif...")
-            imageio.mimsave(save_path, self.frames, fps=20)
-            print(f"Gif `{save_path}` is saved")
-            
+                self.desired_traj_lines.append(desired_line)
+
+    def finalize(self, save_path='./gif/simulation.gif'):
+        handles, labels = self.ax.get_legend_handles_labels()
+        unique = dict(zip(labels, handles))
+        handles, labels = self.ax.get_legend_handles_labels()
+        unique = dict(zip(labels, handles))
+
+        # Add boat type color legend
+        all_handles = list(unique.values()) + self.boat_type_legend_handles
+        all_labels = list(unique.keys()) + [h.get_label() for h in self.boat_type_legend_handles]
+
+        self.ax.legend(all_handles, all_labels, loc='upper right')
+
         if self.mode == 'final':
             plt.ioff()
             plt.show()
+        elif self.mode == 'gif' and save_path:
+            print("Saving gif...")
+            # print(self.frames)
+            imageio.mimsave(save_path, self.frames, fps=10, loop=0)
+            print(f"Gif `{save_path}` is saved")
+    
+    def create_target_phase_plot(self, trajectories, desired_states, save_path=None):
+        """
+        Create a phase plot with the distance to the target and the angle relative to the target for all boats.
+        """
+        fig, ax = plt.subplots(figsize=(10, 8))
+
+        for i in range(self.num_boats):
+            traj = np.array(trajectories[i])
+            target_x, target_y = desired_states[i][0], desired_states[i][1]
+
+            distances = []
+            angles = []
+
+            for state in traj:
+                boat_x, boat_y = state[0], state[1]
+                distance = np.sqrt((boat_x - target_x)**2 + (boat_y - target_y)**2)
+
+                delta_x = target_x - boat_x
+                delta_y = target_y - boat_y
+                angle = np.arctan2(delta_y, delta_x) - state[2]
+                angle = (angle + np.pi) % (2 * np.pi) - np.pi
+
+                distances.append(distance)
+                angles.append(angle)
+
+            color = self.colors[i % len(self.colors)]
+            ax.plot(distances, angles, label=f'Boat {i+1}', color=color, linewidth=2)
+
+        ax.set_title('Phase Plot: Distance to Target vs Angle Relative to Target')
+        ax.set_xlabel('Distance to Target (m)')
+        ax.set_ylabel('Angle to Target (radians)')
+        ax.axhline(0, color='black', linewidth=1)
+        ax.axhline(np.pi, color='red', linewidth=1, linestyle='--')
+        ax.grid(True)
+        ax.legend(loc='upper right')
+
+        if save_path:
+            fig.savefig(save_path)
+            print(f"Phase plot saved at {save_path}")
+        
+        plt.show()
