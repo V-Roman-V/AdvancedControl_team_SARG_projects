@@ -277,9 +277,13 @@ python main.py
 ## Results
 
 ### Differential Drive Boat
-1. gif of the boat simulation from init to desired state  
+
+![alt text](simulator/gif/Differential_gif.gif)
+
 2. image from phase plot with many simulated trajectories that are converging to the desired state
 
 ### Steerable Drive Boat
-1. gif of the boat simulation from init to desired state
+
+![alt text](simulator/gif/Steerable.gif)
+
 2. image from phase plot with many simulated trajectories that are converging to the desired state

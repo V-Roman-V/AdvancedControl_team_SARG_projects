@@ -76,7 +76,7 @@ class SteeringController(Controller):
         # Controller gains - tune these for performance
         self.k_0 = 1  # Position error gain
         self.k_1 = 3  # Velocity-position error gain
-        self.k_2 = 0.05  # Heading error gain
+        self.k_2 = 0.1  # Heading error gain
 
     def compute_control(self, state: np.array, state_des: np.array) -> np.ndarray:
         """
@@ -99,7 +99,7 @@ class SteeringController(Controller):
         # --- Step 3: Compute control ---
         uf = self.k_0 * (x_e**2 + y_e**2) - self.k_1 * (x_e * Vx + y_e * Vy - omega)
         us = self.k_2 * psi_e
-        print(uf, us, np.arctan2(Vy + omega * self.boat_params.L, Vx))
+        # print(uf, us, np.arctan2(Vy + omega * self.boat_params.L, Vx))
         # --- Step 4: Apply saturation ---
         uf = np.clip(uf, 0, self.control_limit[0])
         us = np.clip(self._wrap_angle(us), -self.control_limit[1], self.control_limit[1])

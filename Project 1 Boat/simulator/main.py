@@ -68,16 +68,16 @@ def main():
     """
     Entry point for the simulation. Initializes the vessel, controller, and runs the simulation loop.
     """
-    T = 200
-    dt = 0.01
-    boat_type = 'differential'  # 'differential', 'steerable'
-    # boat_type = 'steerable'  # 'differential', 'steerable'
+    T = 400
+    dt = 0.1
+    # boat_type = 'differential'  # 'differential', 'steerable'
+    boat_type = 'steerable'  # 'differential', 'steerable'
     sim = Simulation(T, dt, 'realtime', boat_type)  # 'gif', 'realtime', 'final'
 
     # TODO: boat type
     # Initial and desired states: [x, y, psi, Vx, Vy, omega]
     init_state = BoatState(x=0, y=0, psi=0, Vx=0, Vy=0, omega=0)
-    desired_state = BoatState(x=0, y=0, psi=0, Vx=0, Vy=0, omega=0)
+    desired_state = BoatState(x=-2, y=3, psi=0, Vx=0, Vy=0, omega=0)
     sim.initialize(init_state, desired_state)
     
     # start
