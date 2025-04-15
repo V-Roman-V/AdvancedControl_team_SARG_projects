@@ -18,8 +18,9 @@ class BoatVisualizer:
         self.control_limits = control_limits
         self.boat_types = boat_types
         self.num_boats = len(boat_types)
-        self.colors = plt.cm.tab20c.colors
-
+        # cmap = plt.cm.viridis  # You can replace with any continuous colormap
+        # norm = Normalize(vmin=0, vmax=len(self.boat_types))  # Normalize to the number of boats
+        self.colors = plt.cm.tab20(np.linspace(0, 1, len(self.boat_types)))
         self.norms = {
             'differential': Normalize(0, control_limits['differential']),
             'steerable': Normalize(0, control_limits['steerable'][0])
@@ -41,7 +42,7 @@ class BoatVisualizer:
         type_to_color = {}
         for i, boat_type in enumerate(self.boat_types):
             if boat_type not in type_to_color:
-                type_to_color[boat_type] = self.colors[i % len(self.colors)]
+                type_to_color[boat_type] = self.colors[i]
 
         # Save for later use in finalize()
         self.boat_type_legend_handles = [
