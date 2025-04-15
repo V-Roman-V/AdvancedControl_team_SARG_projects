@@ -101,8 +101,8 @@ class SteeringController(Controller):
         us = self.k_2 * psi_e
         # print(uf, us, np.arctan2(Vy + omega * self.boat_params.L, Vx))
         # --- Step 4: Apply saturation ---
-        uf = np.clip(uf, 0, self.control_limit[0])
-        us = np.clip(self._wrap_angle(us), -self.control_limit[1], self.control_limit[1])
+        uf = np.clip(uf, 0, self.control_limit)
+        us = np.clip(self._wrap_angle(us), -self.control_limit, self.control_limit)
 
         return np.array([uf, us])
     
