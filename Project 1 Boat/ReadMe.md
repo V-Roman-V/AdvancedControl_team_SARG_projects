@@ -280,12 +280,31 @@ python main.py
 
 ### Differential Drive Boat
 
-![alt text](simulator/gif/Differential_gif.gif)
+The differential drive boat simulation showcases the boat's trajectory and the corresponding phase plot for control. The first image represents the boat's trajectory, with the boat maneuvering through the simulation environment. The second image provides the phase plot, illustrating the relationship between the distance to the target and the angle relative to the target. This demonstrates how the boat adjusts its position and orientation to reach the target efficiently.
 
-2. image from phase plot with many simulated trajectories that are converging to the desired state
+![Diff boat](images/Traj_differential_1.png)
+![Diff boat](images/Phase_differential_1.png)
+
+<!-- ![alt text](simulator/gif/Differential_gif.gif) -->
 
 ### Steerable Drive Boat
 
-![alt text](simulator/gif/Steerable.gif)
+In contrast, the steerable drive boat simulation shows a different type of control mechanism. The trajectory of the steerable boat is illustrated in the first image, while the second image presents the phase plot, which provides insights into the boat's angular correction and distance adjustments relative to the target.
 
-2. image from phase plot with many simulated trajectories that are converging to the desired state
+![Steer boat](images/Steerable_1.png)
+![Steer boat](images/Phase_plot_steerable_1.png)
+<!-- ![alt text](simulator/gif/Steerable.gif) -->
+
+### 60 boats simulation
+
+
+This section presents the results of a complex simulation with 60 boats, focusing on both their trajectory and phase plot. The first image illustrates the trajectories of all 60 boats as they move towards their targets, with varied paths demonstrating the efficiency and challenges of collective navigation. The second image features a phase plot that shows how each boat adjusts its distance and angle relative to the target throughout the simulation, providing a clear representation of the coordination among multiple boats.
+
+
+#### Trajectories simulation
+
+![trajectories](images/Traj_60_boats.png)
+
+#### Phase plot
+
+![Phase plot](images/Phase_plt_60_boats.png)
