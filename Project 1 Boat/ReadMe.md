@@ -35,6 +35,7 @@ $$
 ### Vessel Dynamics
 
 Let $u$ be the control input. The dynamics is:
+
 $$
 \begin{aligned}
 \dot{V}_x &= \frac{1}{m}\left(F_x(u)\right) - D_x V_x,\\
@@ -42,6 +43,7 @@ $$
 \dot{\omega} &= \frac{1}{I_z}\left(M(u)\right) - D_\psi\, \omega,
 \end{aligned}
 $$
+
 where:
 - $m$ is the vessel's mass,
 - $I_z$ is the moment of inertia about the vertical axis,
@@ -73,6 +75,7 @@ F_y(u) &= u_f \sin(u_\phi)\\
 M(u) &= L \cdot u_f \sin(u_\phi)\\
 \end{aligned}
 $$
+
 where:
 - $u_f$ is the control for the motor.
 - $u_\phi$ is the control for the steering angle.
