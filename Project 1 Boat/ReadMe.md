@@ -285,7 +285,9 @@ The differential drive boat simulation showcases the boat's trajectory and the c
 ![Diff boat](images/Traj_differential_1.png)
 ![Diff boat](images/Phase_differential_1.png)
 
-<!-- ![alt text](simulator/gif/Differential_gif.gif) -->
+**gif demonstration:**
+
+![alt text](simulator/gif/Differential_gif.gif)
 
 ### Steerable Drive Boat
 
@@ -293,7 +295,9 @@ In contrast, the steerable drive boat simulation shows a different type of contr
 
 ![Steer boat](images/Steerable_1.png)
 ![Steer boat](images/Phase_plot_steerable_1.png)
-<!-- ![alt text](simulator/gif/Steerable.gif) -->
+
+**gif demonstration:**
+![alt text](simulator/gif/Steerable.gif)
 
 ### 60 boats simulation
 
@@ -308,3 +312,6 @@ This section presents the results of a complex simulation with 60 boats, focusin
 #### Phase plot
 
 ![Phase plot](images/Phase_plt_60_boats.png)
+
+**gif demonstration:**
+![gif with all boats](simulator/gif/simulation.gif)
