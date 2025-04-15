@@ -28,10 +28,9 @@ class DifferentialController(Controller):
         self.control_limit = control_limit
         
         # Controller gains - tune these for performance
-        self.k_p = 7.0    # Position error gain
-        self.k_v = .05     # Velocity damping gain
-        self.k_omega = 2.0 # Angular velocity gain
-        self.k_heading = 1  # Heading alignment gain
+        self.k_0 = 2.5  # Position error gain
+        self.k_1 = 6  # Velocity-position error gain
+        self.k_2 = 1.4  # Heading error gain
 
     def compute_control(self, state: np.array, state_des: np.array) -> np.ndarray:
         """
@@ -42,52 +41,27 @@ class DifferentialController(Controller):
         """
         # --- Step 1: Extract states ---
         x, y, psi, Vx, Vy, omega = state
-        x_d, y_d, _ = state_des[:3]  # Only care about position
+        x_d, y_d, _ = state_des[:3]
         
-        # --- Step 2: Calculate position error ---
-        # Global frame error
+        # --- Step 2: Calculating errors in the body-fixed frame ---
         global_error = np.array([x_d - x, y_d - y])
-        
-        # Convert to boat frame using rotation matrix
         R = np.array([[np.cos(psi), np.sin(psi)],
                       [-np.sin(psi), np.cos(psi)]])
-        boat_frame_error = R @ global_error
-        x_error_b, y_error_b = boat_frame_error
-        
-        # --- Step 3: Compute energy terms ---
-        # Kinetic energy terms
-        kinetic_trans = 0.5 * self.boat_params.mass * (Vx**2 + Vy**2)
-        kinetic_rot = 0.5 * self.boat_params.inertia * omega**2
-        
-        # Potential energy (virtual spring)
-        potential = 0.5 * self.k_p * (global_error[0]**2 + global_error[1]**2)
-        
-        # Total energy (for monitoring)
-        self.total_energy = kinetic_trans + kinetic_rot + potential
-        
-        # --- Step 4: Compute desired forces ---
-        # Longitudinal force (dissipate Vx while driving x error to zero)
-        Fx_des = (self.k_p * x_error_b            # Position correction
-                 - self.k_v * Vx                  # Velocity damping
-                 + self.boat_params.damping[0] * Vx)                 # Compensate natural damping
-        
-        # Lateral force cannot be directly controlled, so we use heading alignment
-        desired_omega = self.k_heading * np.arctan2(y_error_b, x_error_b)
-            
-        omega_error = desired_omega - omega
-        
-        # Desired torque (dissipate omega while aligning to path)
-        tau_des = (self.k_omega * omega_error     # Angular velocity correction
-                 + self.boat_params.damping[2] * omega)            # Compensate natural damping
-        
-        # --- Step 5: Convert to thruster commands ---
-        # Solve u1 + u2 = Fx_des
-        #       u2 - u1 = tau_des * lever_arm (assuming 1m for simplicity)
-        u1 = 0.5 * (Fx_des - tau_des)
-        u2 = 0.5 * (Fx_des + tau_des)
-        
-        # --- Step 6: Apply saturation ---
+        x_e, y_e = R @ global_error  # boat_frame_error
+        psi_e = np.arctan2(y_e, x_e)
+
+        # --- Step 3: Compute control ---
+        u1 = self.k_0 * (x_e) - self.k_1 * (x_e * Vx + y_e * Vy - omega) - self.k_2 * psi_e
+        u2 = self.k_0 * (x_e) - self.k_1 * (x_e * Vx + y_e * Vy + omega) + self.k_2 * psi_e
+
+        # --- Step 4: Apply saturation ---
         u1 = np.clip(u1, 0, self.control_limit)
         u2 = np.clip(u2, 0, self.control_limit)
         
         return np.array([u1, u2])
+
+class SteeringController(Controller):
+    """
+    Steering thrust controller for a boat.
+    """
+    pass
