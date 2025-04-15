@@ -24,6 +24,7 @@ where:
 - $\omega$ is the yaw rate.
 
 The boat kinematic equations are as follows:
+
 $$
 \begin{aligned}
 \dot{x} &= V_x \cos(\psi) - V_y \sin(\psi), \\
@@ -34,13 +35,13 @@ $$
 
 ### Vessel Dynamics
 
-Let $u$ be the control input. The dynamics is:
+Let $u$ be the control input. The dynamics is:  
 
 $$
 \begin{aligned}
-\dot{V}_x &= \frac{1}{m}\left(F_x(u)\right) - D_x V_x,\\
-\dot{V}_y &= \frac{1}{m}\left(F_y(u)\right) - D_y V_y,\\
-\dot{\omega} &= \frac{1}{I_z}\left(M(u)\right) - D_\psi\, \omega,
+\dot{V}_x &= \frac{1}{m}\left(F_x(u)\right) - D_x V_x, \\
+\dot{V}_y &= \frac{1}{m}\left(F_y(u)\right) - D_y V_y, \\
+\dot{\omega} &= \frac{1}{I_z} \left( M(u) \right) - D_p \omega
 \end{aligned}
 $$
 
