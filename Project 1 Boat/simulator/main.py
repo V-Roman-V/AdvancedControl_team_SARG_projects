@@ -18,6 +18,8 @@ class Simulation:
         self.control_limits = {'differential': 20, 'steerable': [40, np.pi/2]}
         self.boat_parameters = BoatParameters(mass=500, inertia=200, damping=[0.5, 0.5, 0.1], L=1)
         self.mode=mode
+        self.frame_numbers = 80
+        self.update_vis_every_n_frame = len(self.time) // self.frame_numbers 
 
     def initialize(self, init_states, desired_states):
         desired_trajs = [[ds.x, ds.y] for ds in desired_states]
@@ -38,7 +40,7 @@ class Simulation:
         )
 
     def simulate(self):
-        for t in tqdm(self.time):
+        for frame, t in enumerate(tqdm(self.time)):
             states, controls = [], []
             for i, boat in enumerate(self.boats):
                 state = boat.state.to_array()
@@ -47,7 +49,10 @@ class Simulation:
                 self.trajectories[i].append(state)
                 states.append(state[:3])
                 controls.append(u)
-            self.visualizer.update(states, self.trajectories, t, controls)
+
+            # Update visualization
+            if frame % self.update_vis_every_n_frame == 0:
+                self.visualizer.update(states, self.trajectories, t, controls)
         print("finalize")
         self.visualizer.create_target_phase_plot(self.trajectories, self.visualizer.desired_trajs, save_path='target_phase_plot.png')
         self.visualizer.finalize()
