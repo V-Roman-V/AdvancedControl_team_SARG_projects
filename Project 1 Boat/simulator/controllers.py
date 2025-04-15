@@ -41,7 +41,7 @@ class DifferentialController(Controller):
         """
         # --- Step 1: Extract states ---
         x, y, psi, Vx, Vy, omega = state
-        x_d, y_d = state_des[:3]
+        x_d, y_d = state_des[:2]
         
         # --- Step 2: Calculating errors in the body-fixed frame ---
         global_error = np.array([x_d - x, y_d - y])
@@ -56,8 +56,12 @@ class DifferentialController(Controller):
         
         # turnaround
         if u1 < 0 and u2 < 0:
-            u1 = 1/2 * self.control_limit
-            u2 = 0
+            if abs(u1) > abs(u2):
+                u1 = 1/2 * self.control_limit
+                u2 = 0
+            else:
+                u2 = 0
+                u1 = 1/2 * self.control_limit
 
         # --- Step 4: Apply saturation ---
         u1 = np.clip(u1, 0, self.control_limit)
@@ -69,7 +73,7 @@ class SteeringController(Controller):
     """
     Steering thrust controller for a boat.
     """
-    def __init__(self, boat_params: BoatParameters, control_limit: list = (10.0, np.pi)):
+    def __init__(self, boat_params: BoatParameters, control_limit: list = (10.0, np.pi/2)):
         super().__init__(boat_params)
         self.control_limit = control_limit
         
@@ -87,7 +91,7 @@ class SteeringController(Controller):
         """
         # --- Step 1: Extract states ---
         x, y, psi, Vx, Vy, omega = state
-        x_d, y_d = state_des[:3]
+        x_d, y_d = state_des[:2]
         
         # --- Step 2: Calculating errors in the body-fixed frame ---
         global_error = np.array([x_d - x, y_d - y])
@@ -101,8 +105,8 @@ class SteeringController(Controller):
         us = self.k_2 * psi_e
         # print(uf, us, np.arctan2(Vy + omega * self.boat_params.L, Vx))
         # --- Step 4: Apply saturation ---
-        uf = np.clip(uf, 0, self.control_limit)
-        us = np.clip(self._wrap_angle(us), -self.control_limit, self.control_limit)
+        uf = np.clip(uf, 0, self.control_limit[0])
+        us = np.clip(self._wrap_angle(us), -self.control_limit[1], self.control_limit[1])
 
         return np.array([uf, us])
     

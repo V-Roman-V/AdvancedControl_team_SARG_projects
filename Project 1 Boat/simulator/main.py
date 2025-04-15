@@ -15,7 +15,7 @@ class Simulation:
         self.boats = []
         self.controllers = []
         self.visualizer = None
-        self.control_limits = {'differential': 20, 'steerable': 40}
+        self.control_limits = {'differential': 20, 'steerable': [40, np.pi/2]}
         self.boat_parameters = BoatParameters(mass=500, inertia=200, damping=[0.5, 0.5, 0.1], L=1)
         self.mode=mode
 

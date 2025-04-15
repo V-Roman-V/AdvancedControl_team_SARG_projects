@@ -22,7 +22,7 @@ class BoatVisualizer:
 
         self.norms = {
             'differential': Normalize(0, control_limits['differential']),
-            'steerable': Normalize(0, control_limits['steerable'])
+            'steerable': Normalize(0, control_limits['steerable'][0])
         }
         self.cmap = plt.cm.Reds
 
@@ -81,11 +81,8 @@ class BoatVisualizer:
             # plt.pause(0.00001)
         elif self.mode == 'gif':
             self.fig.canvas.draw()
-            renderer = self.fig.canvas.get_renderer()
-            raw_data = renderer.buffer_rgba()
-            image = np.frombuffer(raw_data, dtype=np.uint8)
-            image = image.reshape(self.fig.canvas.get_width_height()[::-1] + (4,))
-            image = image[:, :, :3]  # Strip alpha channel
+            image = np.frombuffer(self.fig.canvas.tostring_rgb(), dtype=np.uint8)
+            image = image.reshape(self.fig.canvas.get_width_height()[::-1] + (3,))
             self.frames.append(image)
 
 
@@ -125,5 +122,5 @@ class BoatVisualizer:
         elif self.mode == 'gif' and save_path:
             print("Saving gif...")
             # print(self.frames)
-            imageio.mimsave(save_path, self.frames, fps=10)
+            imageio.mimsave(save_path, self.frames, fps=10, loop=0)
             print(f"Gif `{save_path}` is saved")
