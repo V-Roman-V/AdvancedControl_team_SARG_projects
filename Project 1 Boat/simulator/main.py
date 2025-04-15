@@ -52,27 +52,37 @@ class Simulation:
         self.visualizer.create_target_phase_plot(self.trajectories, self.visualizer.desired_trajs, save_path='target_phase_plot.png')
         self.visualizer.finalize()
 
+def generate_random_boats(num_boats, seed=42, goal=(0, 0)):
+    """
+    Generate random boat types, initial states, and desired states.
+    :param num_boats: Number of boats to generate
+    :param seed: Seed for reproducibility
+    :param goal: Tuple (x, y) target position
+    :return: boat_types, init_states, desired_states
+    """
+    np.random.seed(seed)
+    boat_types = np.random.choice(['differential', 'steerable'], size=num_boats).tolist()
+
+    init_states = []
+    desired_states = []
+
+    for _ in range(num_boats):
+        x = np.random.uniform(-10, 10)
+        y = np.random.uniform(-10, 10)
+        psi = np.random.uniform(-np.pi, np.pi)
+        init_states.append(BoatState(x, y, psi, 0, 0, 0))
+
+        # Slightly jitter the goal to make them non-identical
+        dx = goal[0] # + np.random.uniform(-1.0, 1.0)
+        dy = goal[1] # + np.random.uniform(-1.0, 1.0)
+        desired_states.append(BoatState(dx, dy, np.pi, 0, 0, 0))
+
+    return boat_types, init_states, desired_states
+
 def main():
-    T, dt = 200, 1
-    boat_types = ['differential', 'steerable', 'steerable', 'differential', 'differential']
-    sim = Simulation(T, dt, 'gif', boat_types)
-
-    init_states = [
-        BoatState(0, 0, 0, 0, 0, 0),
-        BoatState(5, -5, np.pi/2, 0, 0, 0),
-        BoatState(15, 15, np.pi/2, 0, 0, 0),
-        BoatState(-15, 15, np.pi/2, 0, 0, 0),
-        BoatState(15, 0, np.pi/2, 0, 0, 0)
-    ]
-
-    desired_states = [
-        BoatState(10, 10, 0, 0, 0, 0),
-        BoatState(10, 10, np.pi, 0, 0, 0),
-        BoatState(10, 10, np.pi, 0, 0, 0),
-        BoatState(10, 10, np.pi, 0, 0, 0),
-        BoatState(10, 10, np.pi, 0, 0, 0)
-    ]
-
+    T, dt = 500, 1
+    boat_types, init_states, desired_states = generate_random_boats(20)
+    sim = Simulation(T, dt, 'final', boat_types)
     sim.initialize(init_states, desired_states)
     sim.simulate()
 

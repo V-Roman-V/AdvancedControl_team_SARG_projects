@@ -18,7 +18,7 @@ class BoatVisualizer:
         self.control_limits = control_limits
         self.boat_types = boat_types
         self.num_boats = len(boat_types)
-        self.colors = plt.cm.tab10.colors
+        self.colors = plt.cm.tab20c.colors
 
         self.norms = {
             'differential': Normalize(0, control_limits['differential']),
@@ -53,7 +53,7 @@ class BoatVisualizer:
             plt.ion()
             plt.show()
 
-    def _create_boat_triangle(self, x, y, psi, size=0.5, color='blue'):
+    def _create_boat_triangle(self, x, y, psi, size=0.3, color='blue'):
         points = np.array([[-size, -size], [size*2, 0], [-size, size]]).T
         rotation = np.array([[np.cos(psi), -np.sin(psi)],
                              [np.sin(psi),  np.cos(psi)]])
@@ -129,52 +129,40 @@ class BoatVisualizer:
         """
         Create a phase plot with the distance to the target and the angle relative to the target for all boats.
         """
-        # Prepare to collect all boats' distance and angle data
-        distances = []
-        angles = []
+        fig, ax = plt.subplots(figsize=(10, 8))
 
-        # Loop over each boat and compute distance and angle to the target
         for i in range(self.num_boats):
-            # Extract boat's trajectory (x, y)
             traj = np.array(trajectories[i])
-            # Target coordinates (desired state)
             target_x, target_y = desired_states[i][0], desired_states[i][1]
 
-            # Compute distance to target and angle relative to target for each point
+            distances = []
+            angles = []
+
             for state in traj:
                 boat_x, boat_y = state[0], state[1]
-                
-                # Calculate distance to target
                 distance = np.sqrt((boat_x - target_x)**2 + (boat_y - target_y)**2)
-                
-                # Calculate angle to the target
+
                 delta_x = target_x - boat_x
                 delta_y = target_y - boat_y
-                angle = np.arctan2(delta_y, delta_x) - state[2]  # state[2] is the boat's heading (psi)
-                angle = (angle + np.pi) % (2 * np.pi) - np.pi  # Normalize the angle to [-pi, pi]
+                angle = np.arctan2(delta_y, delta_x) - state[2]
+                angle = (angle + np.pi) % (2 * np.pi) - np.pi
 
-                # Append the results for plotting
                 distances.append(distance)
                 angles.append(angle)
 
-        # Create the figure for the phase plot
-        fig, ax = plt.subplots(figsize=(10, 8))
+            color = self.colors[i % len(self.colors)]
+            ax.plot(distances, angles, label=f'Boat {i+1}', color=color, linewidth=2)
 
-        # Plot all boats in the same plot
-        ax.scatter(distances, angles, color=self.colors[:len(distances)], alpha=0.7, label='Boat Trajectories')
-
-        # Add labels and title
         ax.set_title('Phase Plot: Distance to Target vs Angle Relative to Target')
         ax.set_xlabel('Distance to Target (m)')
         ax.set_ylabel('Angle to Target (radians)')
-        ax.axhline(0, color='black',linewidth=1)  # Line where angle is 0 (facing target)
-        ax.axhline(np.pi, color='red',linewidth=1, linestyle='--')  # Line where angle is pi (away from target)
+        ax.axhline(0, color='black', linewidth=1)
+        ax.axhline(np.pi, color='red', linewidth=1, linestyle='--')
         ax.grid(True)
+        ax.legend(loc='upper right')
 
-        # Optionally save the plot
         if save_path:
             fig.savefig(save_path)
             print(f"Phase plot saved at {save_path}")
         
-        # Show the plot
         plt.show()
