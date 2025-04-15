@@ -81,7 +81,7 @@ def generate_random_boats(num_boats, seed=42, goal=(0, 0)):
 
 def main():
     T, dt = 500, 1
-    boat_types, init_states, desired_states = generate_random_boats(20)
+    boat_types, init_states, desired_states = generate_random_boats(60)
     sim = Simulation(T, dt, 'final', boat_types)
     sim.initialize(init_states, desired_states)
     sim.simulate()
