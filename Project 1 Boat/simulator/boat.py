@@ -22,6 +22,7 @@ class Boat:
         self.m = mass  # Mass of the vessel
         self.Iz = inertia  # Moment of inertia about vertical axis
         self.D = damping  # Damping coefficients
+        self.L = 1  # Distance from center of mass to thruster (m)
 
     def dynamics(self, control: np.ndarray):
         """
@@ -40,7 +41,7 @@ class Boat:
         # Forces assumed directly proportional to control inputs
         dVx = (control[0] + control[1]) / self.m - self.D[0]*Vx
         dVy = 0 - self.D[1]*Vy  # Assuming negligible lateral thrust
-        domega = (control[1] - control[0]) / self.Iz - self.D[2]*omega
+        domega = self.L * (control[1] - control[0]) / self.Iz - self.D[2]*omega
         return np.array([dx, dy, dpsi, dVx, dVy, domega])
 
     def update_state(self, control, dt):

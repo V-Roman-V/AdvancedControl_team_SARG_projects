@@ -48,7 +48,7 @@ class Simulation():
         """
         desired_state = self.desired_trajectory[0]
         for i, t in enumerate(tqdm(self.time)):
-            control_input = self.controller.compute_control(self.boat.state, desired_state)
+            control_input, _, _ = self.controller.compute_control(self.boat.state, desired_state)
             self.boat.update_state(control_input, self.dt)
             self.trajectory.append(self.boat.state.copy())
             self.control_history.append(control_input.copy())
@@ -60,9 +60,9 @@ def main():
     """
     Entry point for the simulation. Initializes the vessel, controller, and runs the simulation loop.
     """
-    T = 50
+    T = 200
     dt = 0.01
-    sim = Simulation(T, dt, 'gif')  # 'gif', 'realtime', 'final'
+    sim = Simulation(T, dt, 'realtime')  # 'gif', 'realtime', 'final'
 
     # Initial and desired states: [x, y, psi, Vx, Vy, omega]
     init_state = [0, 0, 0, 0, 0, 0]
