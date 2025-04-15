@@ -1,12 +1,12 @@
 import numpy as np
 from boat import Boat
-from control import Controller
+from control import EnergyBasedController  # Changed import
 from visualization import BoatVisualizer
 from tqdm import tqdm
 
 
 class Simulation():
-    def __init__(self, fin_time, dt, mode = 'gif'):
+    def __init__(self, fin_time, dt, mode='gif'):
         self.mode = mode
         self.dt = dt
         self.time = np.arange(0, fin_time, dt)
@@ -27,24 +27,23 @@ class Simulation():
         self.damping = [0.5, 0.5, 0.1]
         self.boat: Boat = None
 
-        # Control
-        self.controller = Controller(
+        # Control - Updated to EnergyBasedController with appropriate parameters
+        self.controller = EnergyBasedController(
             mass=self.mass,
             inertia=self.inertia,
             damping=self.damping,
-            control_limit=20.0,  # Increased for better maneuverability
-            k_p_pos=0.8,         # More aggressive position tracking
-            k_p_v=3.0,
-            Vx_max=2.5,
-            k_p_psi=0.8,        # Faster heading correction
-            k_p_omega=3.0,
-            omega_max=1.2
+            control_limit=20.0,
+            k_p_surge=0.8,    # Body-frame surge error gain
+            k_v=3.0,          # Surge velocity tracking gain
+            Vx_max=2.5,       # Max forward speed
+            k_p_yaw=0.8,      # Body-frame sway error gain
+            k_omega=3.0       # Angular velocity tracking gain
         )
         self.control_history = []
 
     def initialize(self, init_state, desired_trajectory):
         self.desired_trajectory = desired_trajectory
-        self.visualizer =  BoatVisualizer(self.mode, desired_trajectory=desired_trajectory)
+        self.visualizer = BoatVisualizer(self.mode, desired_trajectory=desired_trajectory)
         self.boat = Boat(initial_state=init_state, mass=self.mass, inertia=self.inertia, damping=self.damping)
 
     def simulate(self):
@@ -66,13 +65,13 @@ def main():
     """
     Entry point for the simulation. Initializes the vessel, controller, and runs the simulation loop.
     """
-    T = 50
+    T = 200
     dt = 0.01
     sim = Simulation(T, dt, 'gif')  # 'gif', 'realtime', 'final'
 
     # Initial and desired states: [x, y, psi, Vx, Vy, omega]
     init_state = [0, 0, 0, 0, 0, 0]
-    desired_state = np.array([4, 4, 1, 0, 0, 0])
+    desired_state = np.array([-4, 4, 0, 0, 0, 0])  # Heading (psi) irrelevant for target
     sim.initialize(init_state, [desired_state])
     
     # start
