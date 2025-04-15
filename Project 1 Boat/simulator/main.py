@@ -44,11 +44,12 @@ class Simulation:
                 state = boat.state.to_array()
                 u = self.controllers[i].compute_control(state, self.visualizer.desired_trajs[i])
                 boat.update_state(u, self.dt)
-                self.trajectories[i].append(state[:2])
+                self.trajectories[i].append(state)
                 states.append(state[:3])
                 controls.append(u)
             self.visualizer.update(states, self.trajectories, t, controls)
         print("finalize")
+        self.visualizer.create_target_phase_plot(self.trajectories, self.visualizer.desired_trajs, save_path='target_phase_plot.png')
         self.visualizer.finalize()
 
 def main():
