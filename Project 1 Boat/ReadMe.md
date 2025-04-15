@@ -8,7 +8,7 @@ This project is focused on the **controlling** of a motorized boat using energy 
 
 ## Task Definition
 
-Given the initial state $\mathbf{x}_i$ and a desired position $\mathbf{x}_d$, the goal is to design a control law $ \mathbf{u} = [u_1, u_2]^T$ such that the boat will finish at the desired position with zero velocity.
+Given the initial state $\mathbf{x}_i$ and a desired position $\mathbf{x}_d$, the goal is to design a control law $\mathbf{u} = [u_1, u_2]^T$ such that the boat will finish at the desired position with zero velocity.
 The boat can finish at any angle. The thruster force can only be applied in the forward direction.
 
 
@@ -95,7 +95,7 @@ $$
 \begin{aligned}
 F_x(u) &= u_1 + u_2\\
 F_y(u) &= 0 \\
-M(u) &= L(u_1 - u_2)\\
+M(u) &= L(u_1 - u_2)
 \end{aligned}
 $$
 
@@ -171,6 +171,7 @@ $$
 #### Differential Drive Boat:
 
 Given the differential drive dynamic:
+
 $$
 \begin{aligned}
 F_x(u) &= u_1 + u_2\\
@@ -206,7 +207,8 @@ which is negative semi-definite when $k_1 > \frac{1}{2}, k_2 > 0$.
 
 #### Steerable Drive Boat:
 
-Given the differential drive dynamic:
+Given the steerable drive dynamic:
+
 $$
 \begin{aligned}
 F_x(u) &= u_f \cos(u_\phi)\\
@@ -244,7 +246,7 @@ which is negative semi-definite when $k_1 > 1$.
 ### Stability Proof:
 1. $V$ is positive definite (always ≥ 0, and = 0 only at desired state)
 2. $\dot{V}$ is negative semi-definite (≤ 0 for all states)
-3. The system is asymptotically stable since $\dot{V} = 0$ only when $V_x = V_y = \omega = 0$, which implies $x_e = y_e = 0$
+3. The system is asymptotically stable since $\dot{V} = 0$ only when $V_x = V_y = \omega = 0$
 
 
 ## Repository Structure
