@@ -41,7 +41,7 @@ class DifferentialController(Controller):
         """
         # --- Step 1: Extract states ---
         x, y, psi, Vx, Vy, omega = state
-        x_d, y_d, _ = state_des[:3]
+        x_d, y_d = state_des[:3]
         
         # --- Step 2: Calculating errors in the body-fixed frame ---
         global_error = np.array([x_d - x, y_d - y])
@@ -87,7 +87,7 @@ class SteeringController(Controller):
         """
         # --- Step 1: Extract states ---
         x, y, psi, Vx, Vy, omega = state
-        x_d, y_d, _ = state_des[:3]
+        x_d, y_d = state_des[:3]
         
         # --- Step 2: Calculating errors in the body-fixed frame ---
         global_error = np.array([x_d - x, y_d - y])
