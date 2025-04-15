@@ -17,6 +17,7 @@ class Simulation:
         self.visualizer = None
         self.control_limits = {'differential': 20, 'steerable': 40}
         self.boat_parameters = BoatParameters(mass=500, inertia=200, damping=[0.5, 0.5, 0.1], L=1)
+        self.mode=mode
 
     def initialize(self, init_states, desired_states):
         desired_trajs = [[ds.x, ds.y] for ds in desired_states]
@@ -30,7 +31,7 @@ class Simulation:
                 self.controllers.append(SteeringController(self.boat_parameters, self.control_limits['steerable']))
 
         self.visualizer = BoatVisualizer(
-            mode='realtime',
+            mode=self.mode,
             desired_trajectories=desired_trajs,
             control_limits=self.control_limits,
             boat_types=self.boat_types
@@ -47,22 +48,26 @@ class Simulation:
                 states.append(state[:3])
                 controls.append(u)
             self.visualizer.update(states, self.trajectories, t, controls)
-
+        print("finalize")
         self.visualizer.finalize()
 
 def main():
-    T, dt = 400, 2
-    boat_types = ['differential', 'steerable', 'differential']
-    sim = Simulation(T, dt, 'realtime', boat_types)
+    T, dt = 200, 1
+    boat_types = ['differential', 'steerable', 'steerable', 'differential', 'differential']
+    sim = Simulation(T, dt, 'gif', boat_types)
 
     init_states = [
         BoatState(0, 0, 0, 0, 0, 0),
         BoatState(5, -5, np.pi/2, 0, 0, 0),
-        BoatState(15, 15, np.pi/2, 0, 0, 0)
+        BoatState(15, 15, np.pi/2, 0, 0, 0),
+        BoatState(-15, 15, np.pi/2, 0, 0, 0),
+        BoatState(15, 0, np.pi/2, 0, 0, 0)
     ]
 
     desired_states = [
         BoatState(10, 10, 0, 0, 0, 0),
+        BoatState(10, 10, np.pi, 0, 0, 0),
+        BoatState(10, 10, np.pi, 0, 0, 0),
         BoatState(10, 10, np.pi, 0, 0, 0),
         BoatState(10, 10, np.pi, 0, 0, 0)
     ]

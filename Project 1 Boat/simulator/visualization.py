@@ -4,6 +4,7 @@ from matplotlib.patches import Polygon
 import imageio
 from matplotlib.cm import ScalarMappable
 from matplotlib.colors import Normalize
+from matplotlib.lines import Line2D
 
 class BoatVisualizer:
     def __init__(self, mode='realtime', desired_trajectories=None, control_limits=None, boat_types=None):
@@ -32,9 +33,21 @@ class BoatVisualizer:
         self.ax.axis('equal')
         self.ax.set_aspect('equal', adjustable='box')
 
-        for boat_type in set(boat_types):
-            sm = ScalarMappable(norm=self.norms[boat_type], cmap=self.cmap)
-            self.fig.colorbar(sm, ax=self.ax, label=f'{boat_type.capitalize()} Thrust (N)')
+        # for boat_type in set(boat_types):
+            # sm = ScalarMappable(norm=self.norms[boat_type], cmap=self.cmap)
+            # self.fig.colorbar(sm, ax=self.ax, label=f'{boat_type.capitalize()} Thrust (N)')
+
+        # Map one color to each boat type (first occurrence)
+        type_to_color = {}
+        for i, boat_type in enumerate(self.boat_types):
+            if boat_type not in type_to_color:
+                type_to_color[boat_type] = self.colors[i % len(self.colors)]
+
+        # Save for later use in finalize()
+        self.boat_type_legend_handles = [
+            Line2D([0], [0], color=type_to_color[btype], lw=4, label=f'{btype.capitalize()} Boat')
+            for btype in type_to_color
+        ]
 
         if self.mode == 'realtime':
             plt.ion()
@@ -65,12 +78,17 @@ class BoatVisualizer:
         if self.mode == 'realtime':
             self.fig.canvas.draw()
             self.fig.canvas.flush_events()
-            plt.pause(0.001)
+            # plt.pause(0.00001)
         elif self.mode == 'gif':
             self.fig.canvas.draw()
-            image = np.frombuffer(self.fig.canvas.tostring_rgb(), dtype=np.uint8)
-            image = image.reshape(self.fig.canvas.get_width_height()[::-1] + (3,))
+            renderer = self.fig.canvas.get_renderer()
+            raw_data = renderer.buffer_rgba()
+            image = np.frombuffer(raw_data, dtype=np.uint8)
+            image = image.reshape(self.fig.canvas.get_width_height()[::-1] + (4,))
+            image = image[:, :, :3]  # Strip alpha channel
             self.frames.append(image)
+
+
 
     def _update_trajectories(self, trajectories):
         for i in range(self.num_boats):
@@ -89,15 +107,23 @@ class BoatVisualizer:
                 )
                 self.desired_traj_lines.append(desired_line)
 
-    def finalize(self, save_path=None):
+    def finalize(self, save_path='./gif/simulation.gif'):
         handles, labels = self.ax.get_legend_handles_labels()
         unique = dict(zip(labels, handles))
-        self.ax.legend(unique.values(), unique.keys(), loc='upper right')
+        handles, labels = self.ax.get_legend_handles_labels()
+        unique = dict(zip(labels, handles))
+
+        # Add boat type color legend
+        all_handles = list(unique.values()) + self.boat_type_legend_handles
+        all_labels = list(unique.keys()) + [h.get_label() for h in self.boat_type_legend_handles]
+
+        self.ax.legend(all_handles, all_labels, loc='upper right')
 
         if self.mode == 'final':
             plt.ioff()
             plt.show()
         elif self.mode == 'gif' and save_path:
             print("Saving gif...")
-            imageio.mimsave(save_path, self.frames, fps=20)
+            # print(self.frames)
+            imageio.mimsave(save_path, self.frames, fps=10)
             print(f"Gif `{save_path}` is saved")
