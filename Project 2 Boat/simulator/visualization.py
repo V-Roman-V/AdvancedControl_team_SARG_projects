@@ -28,9 +28,9 @@ class BoatVisualizer:
 
         # Wind visualization parameters
         self.wind_dots = None
-        self.num_wind_dots = 100
+        self.num_wind_dots = 200
         self.wind_dot_positions = None
-        self.wind_dot_size = 4
+        self.wind_dot_size = 20
         self.wind_dot_alpha = 0.5
         self.plot_limits = None  # Will be set during first update
 
