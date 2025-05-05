@@ -169,8 +169,6 @@ class BoatVisualizer:
     def finalize(self, save_path='./gif/simulation.gif'):
         handles, labels = self.ax.get_legend_handles_labels()
         unique = dict(zip(labels, handles))
-        handles, labels = self.ax.get_legend_handles_labels()
-        unique = dict(zip(labels, handles))
 
         # Add boat type color legend
         all_handles = list(unique.values()) + self.boat_type_legend_handles

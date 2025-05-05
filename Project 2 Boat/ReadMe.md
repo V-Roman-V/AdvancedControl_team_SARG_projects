@@ -129,6 +129,7 @@ where:
 - $u_\phi$ is the control for the steering angle.
 - $L$ is the distance between the motor and the center of the boat.
 
+### ----- \\|/ TODO \\|/ ----------
 
 ## Energy-based Control Design
 
@@ -259,6 +260,7 @@ which is negative semi-definite when $k_1 > 1$.
 2. $\dot{V}$ is negative semi-definite (≤ 0 for all states)
 3. The system is asymptotically stable since $\dot{V} = 0$ only when $V_x = V_y = \omega = 0$
 
+### ----- /|\\ TODO /|\\ ----------
 
 ## Repository Structure
 
@@ -289,7 +291,13 @@ python main.py
 
 ## Results
 
-### Differential Drive Boat
+### Old energy-based control with wind: 
+
+As we can see the energy-based control that assumes zero wind cannot provide good control to reach zero position.
+
+![alt text](<simulator/gif/simulation_with_old_control.gif>)
+
+# TODO: update bottom text
 
 The differential drive boat simulation showcases the boat's trajectory and the corresponding phase plot for control. The first image represents the boat's trajectory, with the boat maneuvering through the simulation environment. The second image provides the phase plot, illustrating the relationship between the distance to the target and the angle relative to the target. This demonstrates how the boat adjusts its position and orientation to reach the target efficiently.
 
