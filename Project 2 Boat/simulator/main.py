@@ -5,9 +5,10 @@ from visualization import BoatVisualizer
 from tqdm import tqdm
 
 class Simulation:
-    def __init__(self, fin_time, dt, mode='realtime', boat_types=None):
+    def __init__(self, fin_time, dt, mode='realtime', wind_velocity = (0, 0), boat_types=None):
         self.dt = dt
         self.time = np.arange(0, fin_time, dt)
+        self.wind_velocity = np.array(wind_velocity)
         self.boat_types = boat_types
         self.num_boats = len(boat_types)
         self.trajectories = [[] for _ in range(self.num_boats)]
@@ -26,10 +27,10 @@ class Simulation:
         for i, boat_type in enumerate(self.boat_types):
             state = init_states[i]
             if boat_type == 'differential':
-                self.boats.append(DifferentialThrustBoat(state, self.boat_parameters))
+                self.boats.append(DifferentialThrustBoat(state, self.boat_parameters, self.wind_velocity))
                 self.controllers.append(DifferentialController(self.boat_parameters, self.control_limits['differential']))
             else:
-                self.boats.append(SteerableThrustBoat(state, self.boat_parameters))
+                self.boats.append(SteerableThrustBoat(state, self.boat_parameters, self.wind_velocity))
                 self.controllers.append(SteeringController(self.boat_parameters, self.control_limits['steerable']))
 
         self.visualizer = BoatVisualizer(
@@ -88,8 +89,9 @@ def generate_random_boats(num_boats, seed=42, goal=(0, 0)):
 
 def main():
     T, dt = 300, 1
+    wind_velocity = (0.03, 0)
     boat_types, init_states, desired_states = generate_random_boats(10)
-    sim = Simulation(T, dt, 'gif', boat_types)
+    sim = Simulation(T, dt, 'gif', wind_velocity, boat_types)
     sim.initialize(init_states, desired_states)
     sim.simulate()
 
