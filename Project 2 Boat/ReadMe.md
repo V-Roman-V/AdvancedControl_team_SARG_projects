@@ -324,5 +324,5 @@ This section presents the results of a complex simulation with 60 boats, focusin
 
 ![Phase plot](images/Phase_plt_60_boats.png)
 
-**gif demonstration:**
+**gif demonstration: **
 ![gif with all boats](simulator/gif/simulation.gif)
