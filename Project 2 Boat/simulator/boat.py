@@ -8,8 +8,8 @@ class BoatState:
     x: float
     y: float
     psi: float
-    Vx: float
-    Vy: float
+    Vx: float  # Body-frame x velocity
+    Vy: float  # Body-frame y velocity
     omega: float
 
     @classmethod
@@ -34,22 +34,30 @@ class BoatState:
         self.Vy += derivatives[4] * dt
         self.omega += derivatives[5] * dt
 
+
 @dataclass
 class BoatParameters:
     """Parameters of the boat."""
     mass: float
     inertia: float
-    damping: list
+    damping: list  # [Dx, Dy, Dpsi] damping coefficients
     L: float  # Distance from CoM to thruster
+
 
 class Boat:
     """Base class for boat dynamics with thrusters."""
-    def __init__(self, init_state: BoatState, params: BoatParameters):
+    def __init__(self, init_state: BoatState, params: BoatParameters, wind_velocity: np.ndarray):
         """
         Initializes the Boat object with initial conditions and system parameters.
+        
+        Args:
+            init_state: Initial state of the boat
+            params: Boat parameters
+            wind_velocity: Global frame wind velocity [Vx_wind, Vy_wind]
         """
         self.state = init_state
         self.params = params
+        self.wind_velocity = wind_velocity  # Wind in global frame [Vw_x, Vw_y]
 
     def dynamics(self, control: np.ndarray) -> np.ndarray:
         """
@@ -71,6 +79,12 @@ class Boat:
         dx = self.state.Vx * np.cos(self.state.psi) - self.state.Vy * np.sin(self.state.psi)
         dy = self.state.Vx * np.sin(self.state.psi) + self.state.Vy * np.cos(self.state.psi)
         dpsi = self.state.omega
+
+        # Apply wind disturbance
+        dx += self.wind_velocity[0]
+        dy += self.wind_velocity[1]
+
+        # Dynamics
         dVx = (Fx / self.params.mass) - self.params.damping[0] * self.state.Vx
         dVy = (Fy / self.params.mass) - self.params.damping[1] * self.state.Vy
         domega = (M / self.params.inertia) - self.params.damping[2] * self.state.omega
