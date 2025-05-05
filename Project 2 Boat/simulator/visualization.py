@@ -7,8 +7,9 @@ from matplotlib.colors import Normalize
 from matplotlib.lines import Line2D
 
 class BoatVisualizer:
-    def __init__(self, mode='realtime', desired_trajectories=None, control_limits=None, boat_types=None):
+    def __init__(self, mode='realtime', desired_trajectories=None, control_limits=None, boat_types=None, wind_velocity=(0,0)):
         self.mode = mode
+        self.wind_velocity = np.array(wind_velocity)
         self.fig, self.ax = plt.subplots(figsize=(10, 8))
         self.boat_patches = []
         self.trajectory_lines = []
@@ -18,14 +19,20 @@ class BoatVisualizer:
         self.control_limits = control_limits
         self.boat_types = boat_types
         self.num_boats = len(boat_types)
-        # cmap = plt.cm.viridis  # You can replace with any continuous colormap
-        # norm = Normalize(vmin=0, vmax=len(self.boat_types))  # Normalize to the number of boats
         self.colors = plt.cm.tab20(np.linspace(0, 1, len(self.boat_types)))
         self.norms = {
             'differential': Normalize(0, control_limits['differential']),
             'steerable': Normalize(0, control_limits['steerable'][0])
         }
         self.cmap = plt.cm.Reds
+
+        # Wind visualization parameters
+        self.wind_dots = None
+        self.num_wind_dots = 100
+        self.wind_dot_positions = None
+        self.wind_dot_size = 4
+        self.wind_dot_alpha = 0.5
+        self.plot_limits = None  # Will be set during first update
 
         self.ax.set_title('Multi-Boat Trajectory Tracking')
         self.ax.set_xlabel('X Position')
@@ -34,17 +41,12 @@ class BoatVisualizer:
         self.ax.axis('equal')
         self.ax.set_aspect('equal', adjustable='box')
 
-        # for boat_type in set(boat_types):
-            # sm = ScalarMappable(norm=self.norms[boat_type], cmap=self.cmap)
-            # self.fig.colorbar(sm, ax=self.ax, label=f'{boat_type.capitalize()} Thrust (N)')
-
-        # Map one color to each boat type (first occurrence)
+        # Create legend handles for boat types
         type_to_color = {}
         for i, boat_type in enumerate(self.boat_types):
             if boat_type not in type_to_color:
                 type_to_color[boat_type] = self.colors[i]
 
-        # Save for later use in finalize()
         self.boat_type_legend_handles = [
             Line2D([0], [0], color=type_to_color[btype], lw=4, label=f'{btype.capitalize()} Boat')
             for btype in type_to_color
@@ -61,11 +63,70 @@ class BoatVisualizer:
         rotated_points = (rotation @ points).T + [x, y]
         return Polygon(rotated_points, closed=True, color=color, alpha=0.8)
 
-    def update(self, current_states, trajectories, current_step, controls):
+    def _initialize_wind_dots(self, x_lim, y_lim):
+        """Initialize wind dots within the given plot limits"""
+        self.wind_dot_positions = np.column_stack([
+            np.random.uniform(x_lim[0], x_lim[1], self.num_wind_dots),
+            np.random.uniform(y_lim[0], y_lim[1], self.num_wind_dots)
+        ])
+        self.wind_dots = self.ax.scatter(
+            self.wind_dot_positions[:, 0],
+            self.wind_dot_positions[:, 1],
+            s=self.wind_dot_size,
+            color='gray',
+            alpha=self.wind_dot_alpha,
+            marker='.',
+            label='Wind'
+        )
+
+    def _update_wind_dots(self, x_lim, y_lim, dt):
+        """Update wind dot positions and handle boundary conditions"""
+        if self.wind_dots is None:
+            return
+
+        # Move dots with wind velocity
+        self.wind_dot_positions += self.wind_velocity * dt
+
+        # Check boundaries and reset dots that go out of bounds
+        reach_x_max = self.wind_dot_positions[:, 0] > x_lim[1]
+        reach_x_min = self.wind_dot_positions[:, 0] < x_lim[0]
+        reach_y_max = self.wind_dot_positions[:, 1] > y_lim[1]
+        reach_y_min = self.wind_dot_positions[:, 1] < y_lim[0]
+
+        # reset dot coordinate
+        self.wind_dot_positions[reach_x_max, 0] = x_lim[0]
+        self.wind_dot_positions[reach_x_min, 0] = x_lim[1]
+        self.wind_dot_positions[reach_y_max, 1] = y_lim[0]
+        self.wind_dot_positions[reach_y_min, 1] = y_lim[1]
+
+        # Update scatter plot data
+        self.wind_dots.set_offsets(self.wind_dot_positions)
+
+    def update(self, current_states, trajectories, current_step, controls, dt):
+        trajectories = np.array(trajectories)
+
+        # Clear previous boat patches
         for patch in self.boat_patches:
             patch.remove()
         self.boat_patches = []
 
+        all_x = np.concatenate([traj[:, 0] for traj in trajectories])
+        all_y = np.concatenate([traj[:, 1] for traj in trajectories])
+        x_min, x_max = np.min(all_x), np.max(all_x)
+        y_min, y_max = np.min(all_y), np.max(all_y)
+        x_pad = (x_max - x_min) * 0.05
+        y_pad = (y_max - y_min) * 0.05
+        x_lim = (np.min(all_x) - x_pad, np.max(all_x) + x_pad)
+        y_lim = (np.min(all_y) - y_pad, np.max(all_y) + y_pad)
+        self.ax.set_xlim(x_lim)
+        self.ax.set_ylim(y_lim)
+
+        if self.wind_dots is None and np.any(self.wind_velocity != 0):
+            self._initialize_wind_dots(x_lim, y_lim)
+
+        self._update_wind_dots(x_lim, y_lim, dt=dt)
+
+        # Update boats
         for i in range(self.num_boats):
             x, y, psi = current_states[i]
             boat_color = self.colors[i % len(self.colors)]

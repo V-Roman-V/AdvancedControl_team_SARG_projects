@@ -37,7 +37,8 @@ class Simulation:
             mode=self.mode,
             desired_trajectories=desired_trajs,
             control_limits=self.control_limits,
-            boat_types=self.boat_types
+            boat_types=self.boat_types,
+            wind_velocity=self.wind_velocity,
         )
 
     def simulate(self):
@@ -53,7 +54,7 @@ class Simulation:
 
             # Update visualization
             if frame % self.update_vis_every_n_frame == 0:
-                self.visualizer.update(states, self.trajectories, t, controls)
+                self.visualizer.update(states, self.trajectories, t, controls, self.dt * self.update_vis_every_n_frame)
         print("finalize")
         self.visualizer.create_target_phase_plot(self.trajectories, self.visualizer.desired_trajs, save_path='target_phase_plot.png')
         self.visualizer.finalize()
