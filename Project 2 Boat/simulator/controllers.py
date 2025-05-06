@@ -31,8 +31,9 @@ class DifferentialController(Controller):
         self.k_0 = 2.5  # Position error gain
         self.k_1 = 6  # Velocity-position error gain
         self.k_2 = 1.4  # Heading error gain
+        self.k_w = 1/5 * self.boat_params.mass
 
-        self.gamma_wind = 0.001  # wind coefficient
+        self.gamma_wind = 0.3  # wind coefficient
 
     def compute_control(self, state: np.array, state_des: np.array) -> tuple[np.ndarray, np.ndarray]:
         """
@@ -53,9 +54,15 @@ class DifferentialController(Controller):
         x_e, y_e = R @ global_error  # boat_frame_error
         psi_e = np.arctan2(y_e, x_e)
 
-        # --- Step 3: Compute control --- # TODO: update control law
-        u1 = self.k_0 * (x_e) - self.k_1 * (x_e * Vx + y_e * Vy - omega) - self.k_2 * psi_e
-        u2 = self.k_0 * (x_e) - self.k_1 * (x_e * Vx + y_e * Vy + omega) + self.k_2 * psi_e
+        # --- Step 3: Wind transformation ---
+        Vw_x_body = Wx_est * np.cos(psi) + Wy_est * np.sin(psi)  # Wind velocity in body frame
+        Vw_y_body = -Wx_est * np.sin(psi) + Wy_est * np.cos(psi)
+        
+        # print(f"wind D: {Vw_x_body}, {Vw_y_body}")
+
+        # --- Step 4: Compute control ---
+        u1 = self.k_0 * (x_e) - self.k_1 * (x_e * (Vx-Vw_x_body) + y_e * (Vy-Vw_y_body) - omega) - self.k_2 * psi_e - self.k_w * Vw_x_body + 2 * Vx*self.boat_params.damping[0]
+        u2 = self.k_0 * (x_e) - self.k_1 * (x_e * (Vx-Vw_x_body) + y_e * (Vy-Vw_y_body) + omega) + self.k_2 * psi_e - self.k_w * Vw_x_body + 2 * Vx*self.boat_params.damping[0]
         
         # turnaround
         if u1 < 0 and u2 < 0:
@@ -76,8 +83,8 @@ class DifferentialController(Controller):
         Vy_global = Vx * np.sin(psi) + Vy * np.cos(psi)
         
         # Wind estimation adaptation law (simple proportional update rule)
-        dWx = self.gamma_wind * (Vx_global - Wx_est)
-        dWy = self.gamma_wind * (Vy_global - Wy_est)
+        dWx = self.gamma_wind * (-Vx_global - Wx_est)
+        dWy = self.gamma_wind * (-Vy_global - Wy_est)
 
         # Return thruster commands and wind estimation derivatives
         return np.array([u1, u2]), np.array([dWx, dWy])
@@ -94,8 +101,9 @@ class SteeringController(Controller):
         self.k_0 = 1  # Position error gain
         self.k_1 = 3  # Velocity-position error gain
         self.k_2 = 0.1  # Heading error gain
+        self.k_w = 2.4/5 * self.boat_params.mass
 
-        self.gamma_wind = 0.005  # wind coefficient
+        self.gamma_wind = 0.3  # wind coefficient
 
     def compute_control(self, state: np.array, state_des: np.array) -> np.ndarray:
         """
@@ -115,17 +123,32 @@ class SteeringController(Controller):
         x_e, y_e = R @ global_error  # boat_frame_error
         psi_e = np.arctan2(y_e, x_e)
 
-        # --- Step 3: Compute control ---
-        uf = self.k_0 * (x_e**2 + y_e**2) - self.k_1 * (x_e * Vx + y_e * Vy - omega)
+        # --- Step 3: Wind transformation ---
+        Vw_x_body = Wx_est * np.cos(psi) + Wy_est * np.sin(psi)  # Wind velocity in body frame
+        Vw_y_body = -Wx_est * np.sin(psi) + Wy_est * np.cos(psi)
+        # print(f"wind S : {Vw_x_body}, {Vw_y_body}")
+
+        # --- Step 4: Compute control ---
+        uf = self.k_0 * (x_e**2 + y_e**2) - self.k_1 * (x_e * (Vx-Vw_x_body) + y_e * (Vy-Vw_y_body)) - self.k_w * Vw_x_body + Vx*self.boat_params.damping[0]
         us = self.k_2 * psi_e
-        # print(uf, us, np.arctan2(Vy + omega * self.boat_params.L, Vx))
-        # --- Step 4: Apply saturation ---
+        
+        # turnaround
+        if uf < 0:
+            uf = 1/2 * self.control_limit[0]
+            us = np.sign(self._wrap_angle(us)) * self.control_limit[1]
+
+        # --- Step 5: Apply saturation ---
         uf = np.clip(uf, 0, self.control_limit[0])
         us = np.clip(self._wrap_angle(us), -self.control_limit[1], self.control_limit[1])
 
-        # Wind estimation: update wind derivative
-        dWx = self.gamma_wind * (self.k_0 * x_e + self.k_1 * Vx)
-        dWy = self.gamma_wind * (self.k_0 * y_e + self.k_1 * Vy)
+        # --- Step 6: Wind Estimation: update wind derivative ---
+        # We estimate the wind using the difference between the observed and expected velocities in global frame
+        Vx_global = Vx * np.cos(psi) - Vy * np.sin(psi)
+        Vy_global = Vx * np.sin(psi) + Vy * np.cos(psi)
+        
+        # Wind estimation adaptation law (simple proportional update rule)
+        dWx = self.gamma_wind * (-Vx_global - Wx_est)
+        dWy = self.gamma_wind * (-Vy_global - Wy_est)
 
         return np.array([uf, us]), np.array([dWx, dWy])
     

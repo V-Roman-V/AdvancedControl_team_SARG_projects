@@ -61,7 +61,7 @@ class BoatVisualizer:
         rotation = np.array([[np.cos(psi), -np.sin(psi)],
                              [np.sin(psi),  np.cos(psi)]])
         rotated_points = (rotation @ points).T + [x, y]
-        return Polygon(rotated_points, closed=True, color=color, alpha=0.5)
+        return Polygon(rotated_points, closed=True, color=color, alpha=0.5, zorder=3)
 
     def _initialize_wind_dots(self, x_lim, y_lim):
         """Initialize wind dots within the given plot limits"""
@@ -76,7 +76,8 @@ class BoatVisualizer:
             color='gray',
             alpha=self.wind_dot_alpha,
             marker='.',
-            label='Wind'
+            label='Wind',
+            zorder=0  # Add this line
         )
 
     def _update_wind_dots(self, x_lim, y_lim, dt):
@@ -162,13 +163,13 @@ class BoatVisualizer:
         for i in range(self.num_boats):
             traj = np.array(trajectories[i])
             if len(self.trajectory_lines) <= i:
-                traj_line, = self.ax.plot([], [], ':', color=self.type_to_color[self.boat_types[i]], label=f'Boat {i+1} Path')
+                traj_line, = self.ax.plot([], [], ':', color=self.type_to_color[self.boat_types[i]], label=f'Boat {i+1} Path',zorder=1)
                 self.trajectory_lines.append(traj_line)
             self.trajectory_lines[i].set_data(traj[:,0], traj[:,1])
 
         for i, desired_traj in enumerate(self.desired_trajs):
             if len(self.desired_traj_lines) <= i:
-                desired_line, = self.ax.plot(desired_traj[0], desired_traj[1], 'o', color=self.type_to_color[self.boat_types[i]], label=f'Boat {i+1} Desired')
+                desired_line, = self.ax.plot(desired_traj[0], desired_traj[1], 'o', color=self.type_to_color[self.boat_types[i]], label=f'Boat {i+1} Desired', zorder=2)
                 self.desired_traj_lines.append(desired_line)
 
     def finalize(self, save_path='./gif/simulation.gif'):
