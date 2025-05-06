@@ -57,6 +57,7 @@ class Simulation:
                 self.visualizer.update(states, self.trajectories, t, controls, self.dt * self.update_vis_every_n_frame)
         print("finalize")
         self.visualizer.create_target_phase_plot(self.trajectories, self.visualizer.desired_trajs, save_path='target_phase_plot.png')
+        self.visualizer.create_estimated_wind_plot(self.trajectories, self.wind_velocity, save_path='wind_estimates_plot.png')
         self.visualizer.finalize()
 
 def generate_random_boats(num_boats, seed=42, goal=(0, 0)):

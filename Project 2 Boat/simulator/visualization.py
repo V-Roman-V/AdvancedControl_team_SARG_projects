@@ -225,4 +225,57 @@ class BoatVisualizer:
             fig.savefig(save_path)
             print(f"Phase plot saved at {save_path}")
         
-        plt.show()
+        # plt.show()
+
+    def create_estimated_wind_plot(self, trajectories, wind_velocity, save_path=None):
+        """Create plots showing wind velocity estimates for all boats over time.
+        
+        Args:
+            trajectories: List of boat trajectories, where each trajectory is 
+                        a list of BoatState objects
+            wind_velocity: Tuple (true_wind_x, true_wind_y)
+            save_path: Optional path to save the figure
+        """
+        fig, (ax1, ax2) = plt.subplots(2, 1, num=3, figsize=(10, 10))
+        
+        # Create time axis based on number of steps
+        num_steps = len(trajectories[0])
+        time = np.arange(num_steps)  # Using step indices as time
+        
+        # Plot estimates for each boat
+        for i, boat_traj in enumerate(trajectories):
+            # Extract wind estimates from boat states
+            wx_estimates = [state[6] for state in boat_traj]
+            wy_estimates = [state[7] for state in boat_traj]
+            
+            color = self.colors[i % len(self.colors)]
+            label = f'Boat {i+1} ({self.boat_types[i]})'
+            
+            ax1.plot(time, wx_estimates, color=color, label=label)
+            ax2.plot(time, wy_estimates, color=color, label=label)
+        
+        # Plot true wind values
+        ax1.axhline(wind_velocity[0], color='black', linestyle='--', 
+                linewidth=2, label='True Wind X')
+        ax2.axhline(wind_velocity[1], color='black', linestyle='--',
+                linewidth=2, label='True Wind Y')
+        
+        # Configure plots
+        ax1.set_title('Wind X Component Estimates')
+        ax1.set_ylabel('Velocity (m/s)')
+        ax1.grid(True)
+        ax1.legend(loc='upper right')
+        
+        ax2.set_title('Wind Y Component Estimates')
+        ax2.set_xlabel('Time Step')
+        ax2.set_ylabel('Velocity (m/s)')
+        ax2.grid(True)
+        ax2.legend(loc='upper right')
+        
+        plt.tight_layout()
+        
+        if save_path:
+            plt.savefig(save_path)
+            print(f"Wind estimation plots saved to {save_path}")
+        
+        # plt.show()
