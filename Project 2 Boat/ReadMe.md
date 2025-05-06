@@ -67,8 +67,7 @@ $$
     V_x \\
     V_y \\
     \omega
-\end{bmatrix}
-+
+\end{bmatrix} +
 \begin{bmatrix}
 0 & 0 & 0 \\
 0 & 0 & 0 \\
@@ -81,8 +80,7 @@ $$
 F_x(u) \\
 F_y(u) \\
 M(u)
-\end{bmatrix}
-+
+\end{bmatrix} +
 \begin{bmatrix}
 V_{w_x} \\
 V_{w_y} \\
@@ -149,9 +147,9 @@ $$
 
 where:
 
-- $ x_e = x - x_d $, $ y_e = y - y_d $ are position errors in body frame,
-- $ \psi_e = \psi - \psi_d $ is the heading error (though $ \psi_d $ is arbitrary here),
-- $ k_0, k_1, k_2 $ are positive gains.
+- $x_e = x - x_d$, $y_e = y - y_d$ are position errors in body frame,
+- $\psi_e = \psi - \psi_d$ is the heading error (though $\psi_d$ is arbitrary here),
+- $k_0, k_1, k_2$ are positive gains.
 
 Taking the time derivative and substituting dynamics, we obtain the control inputs:
 
@@ -165,13 +163,17 @@ $$
 **Implementation Notes:**
 
 1. **Clipping**: Thrusters are unidirectional, so inputs are saturated:
+
    $$
    u_1 = \text{clip}(0, u_1, u_{\text{max}}), \quad u_2 = \text{clip}(0, u_2, u_{\text{max}}).
    $$
-2. **Turn-around Case**: If both $ u_1, u_2 < 0 $, the boat must reverse direction. We enforce:
+
+2. **Turn-around Case**: If both $u_1, u_2 < 0$, the boat must reverse direction. We enforce:
+
    $$
    \text{If } u_1 < 0 \text{ and } u_2 < 0, \quad \text{set } u_1 = \frac{1}{2} u_{\text{max}}, u_2 = 0 \text{ (or vice versa)}.
    $$
+
 
 #### **Steerable Drive Boat**
 
@@ -190,18 +192,19 @@ u_\phi &= k_2 \psi_e,
 \end{aligned}
 $$
 
-where $ u_f $ is the thrust magnitude and $ u_\phi $ the steering angle.
+where $u_f$ is the thrust magnitude and $u_\phi$ the steering angle.
 
 **Implementation Notes:**
 
 1. **Clipping**:
+
    $$
    u_f = \text{clip}(0, u_f, u_{f_{\text{max}}}), \quad u_\phi = \text{clip}(-u_{\phi_{\text{max}}}, u_\phi, u_{\phi_{\text{max}}}).
    $$
 
 ### Adaptive Control
 
-To handle unknown wind disturbances $ (V_{w_x}, V_{w_y}) $, we augment the energy-based controller with an adaptation law that estimates and compensates for the wind effects during the work.
+To handle unknown wind disturbances $(V_{w_x}, V_{w_y})$, we augment the energy-based controller with an adaptation law that estimates and compensates for the wind effects during the work.
 
 #### **1. State Augmentation**
 
@@ -228,7 +231,7 @@ where:
 
 #### **3. Adaptation Laws**
 
-Derive adaptation laws by ensuring $ \dot{E}_a \leq 0 $:
+Derive adaptation laws by ensuring $\dot{E}_a \leq 0$:
 
 $$
 \begin{aligned}
@@ -250,6 +253,7 @@ $$
 #### **4. Adaptive Control Laws**
 
 **Differential Drive:**
+
 $$
 \begin{aligned}
 u_1 &= k_0 x_e - k_1 \left( x_e (V_x - \hat{V}_{w\text{\_x\_local}}) + y_e (V_y - \hat{V}_{w\text{\_y\_local}}) - \omega \right) - k_2 \psi_e - k_w \hat{V}_{w\text{\_x\_local}}, \\
@@ -258,6 +262,7 @@ u_2 &= k_0 x_e - k_1 \left( x_e (V_x - \hat{V}_{w\text{\_x\_local}}) + y_e (V_y 
 $$
 
 **Steerable Drive:**
+
 $$
 \begin{aligned}
 u_f &= k_0 (x_e^2 + y_e^2) - k_1 \left( x_e (V_x - \hat{V}_{w\text{\_x\_local}}) + y_e (V_y - \hat{V}_{w\text{\_y\_local}}) \right) - k_w \hat{V}_{w\text{\_x\_local}}, \\
