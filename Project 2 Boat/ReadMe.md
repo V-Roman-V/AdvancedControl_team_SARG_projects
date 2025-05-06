@@ -87,7 +87,7 @@ Vwy \\
 0   \\
 0   \\
 0   \\
-\omega
+0
 \end{bmatrix}
 $$
 
