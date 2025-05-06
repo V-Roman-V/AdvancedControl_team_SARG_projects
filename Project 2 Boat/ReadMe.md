@@ -202,6 +202,17 @@ $$
 u_f = \text{clip}(0, u_f, u_{f Max}), \quad u_\phi = \text{clip}(-u_{\phi Max}, u_\phi, u_{\phi Max}).
 $$
 
+### Old energy-based control with wind:
+
+As we can see the energy-based control that assumes zero wind cannot provide good control to reach zero position.
+
+![alt text](<simulator/gif/simulation_with_old_control.gif>)
+![alt text](<simulator/gif/simulation_energy_based.gif>)
+
+### Phase plot
+
+![Phase plot for energy based control with wind](images/energy_based_phase_plot.png)
+
 ### Adaptive Control
 
 To handle unknown wind disturbances $(V_{wx}, V_{wy})$, we augment the energy-based controller with an adaptation law that estimates and compensates for the wind effects during the work.
@@ -326,17 +337,6 @@ $$
 - **Simulation duration**: The simulation runs for a total time of $T = 300$ seconds, with a time step $\Delta t = 1$ second.
 
 ## Results
-
-### Old energy-based control with wind:
-
-As we can see the energy-based control that assumes zero wind cannot provide good control to reach zero position.
-
-![alt text](<simulator/gif/simulation_with_old_control.gif>)
-![alt text](<simulator/gif/simulation_energy_based.gif>)
-
-### Phase plot
-
-![Phase plot for energy based control with wind](images/energy_based_phase_plot.png)
 
 ## Adaptive control
 
