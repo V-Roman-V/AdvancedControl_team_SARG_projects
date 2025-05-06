@@ -129,138 +129,70 @@ where:
 - $u_\phi$ is the control for the steering angle.
 - $L$ is the distance between the motor and the center of the boat.
 
-### ----- \\|/ TODO \\|/ ----------
+## Control Design
 
-## Energy-based Control Design
+### Previous Energy-Based Control:
 
-### Lyapunov Function Candidate:
-We'll use the total energy with additional potential term as our Lyapunov function:
+In the previous project, we developed an energy-based control strategy for motorized boats, using Lyapunov stability theory.
 
-$$
-V = \frac{1}{2}m(V_x^2 + V_y^2) + \frac{1}{2}I_z\omega^2 + \frac{1}{2}k_p(x_e^2 + y_e^2)
-$$
+#### **Differential Drive Boat**
 
-The energy consists of three parts:
-- Kinetic energy of the linear motion
-- Kinetic energy of the rotational motion
-- Potential energy (error in position)
-
-Where:
-- $x_e = x - x_d$ and $y_e = y - y_d$ are the position errors (in the body-fixed frame)
-- $k_p$ is a positive constant like a gravitational constant
-
-### Time Derivative:
-$$
-\dot{V} = m(V_x\dot{V}_x + V_y\dot{V}_y) + I_z\omega\dot{\omega} + k_p(x_e\dot{x}_e + y_e\dot{y}_e)
-$$
-
-Where:
-- $\dot{x}_e = V_x$ and $\dot{y}_e = V_y$ when the desired position is fixed
-
-Substituting the boat dynamics into the time derivative of the Lyapunov function:
+The control law for differential drive is derived from an energy function combining position and orientation errors:
 
 $$
-\dot{V} = m\left(V_x\left(\frac{1}{m}F_x\left(u\right) - D_x V_x\right) + V_y\left(\frac{1}{m}F_y\left(u\right) - D_y V_y\right)\right) + I_z\omega\left(\frac{1}{I_z}  M\left(u\right)  - D_ψ \omega\right) + k_p\left(x_e V_x + y_e V_y\right)
+E = \frac{1}{2} k_0 (x_e^2 + y_e^2) + \frac{1}{2} k_1 (V_x^2 + V_y^2) + \frac{1}{2} k_2 \psi_e^2,
 $$
 
-Simplifying gives:
+where:
+- \( x_e = x - x_d \), \( y_e = y - y_d \) are position errors in body frame,
+- \( \psi_e = \psi - \psi_d \) is the heading error (though \( \psi_d \) is arbitrary here),
+- \( k_0, k_1, k_2 \) are positive gains.
 
-$$
-\dot{V} = V_x F_x(u) + V_y F_y(u) + \omega M(u) - m D_x V_x^2 - m D_y V_y^2 - I_z D_ψ \omega^2 + k_p\left(x_e V_x + y_e V_y\right) 
-$$
-
-We wants to have $\dot{V} \leq 0$ for all states, simplifying negative terms gives:
-
-$$
-\dot{V} = V_x F_x(u) + V_y F_y(u) + \omega M(u) + k_p(x_e V_x + y_e V_y) \leq 0
-$$
-
-$$
-V_x F_x(u) + V_y F_y(u) + \omega M(u) \leq -k_p(x_e V_x + y_e V_y)
-$$
-
-
-#### Differential Drive Boat:
-
-Given the differential drive dynamic:
-
+Taking the time derivative and substituting dynamics, we obtain the control inputs:
 $$
 \begin{aligned}
-F_x(u) &= u_1 + u_2\\
-F_y(u) &= 0 \\
-M(u) &= L(u_1 - u_2)\\
+u_1 &= k_0 x_e - k_1 (x_e V_x + y_e V_y - \omega) - k_2 \psi_e, \\
+u_2 &= k_0 x_e - k_1 (x_e V_x + y_e V_y + \omega) + k_2 \psi_e.
 \end{aligned}
 $$
 
-Substituting into the derivative of Lyapunov function gives:
+**Implementation Notes:**
+1. **Clipping**: Thrusters are unidirectional, so inputs are saturated:
+   $$
+   u_1 = \text{clip}(0, u_1, u_{\text{max}}), \quad u_2 = \text{clip}(0, u_2, u_{\text{max}}).
+   $$
+2. **Turn-around Case**: If both \( u_1, u_2 < 0 \), the boat must reverse direction. We enforce:
+   $$
+   \text{If } u_1 <0 \text{ and } u_2 < 0, \quad \text{set } u_1 = \frac{1}{2} u_{\text{max}}, u_2 = 0 \text{ (or vice versa)}.
+   $$
 
+#### **Steerable Drive Boat**
+
+For steerable thrusters, the energy function is the same:
 $$
-V_x (u_1 + u_2) + \omega L(u_1 - u_2) \leq -k_p(x_e V_x + y_e V_y)
-$$
-
-
-**We can choose the control law as:**
-
-$$
-\begin{aligned}
-u_1 &= -k_1\frac{k_p}{V_x}(x_e V_x + y_e V_y) - k_2 \omega \\
-u_2 &= -k_1\frac{k_p}{V_x}(x_e V_x + y_e V_y) + k_2 \omega
-\end{aligned}
-$$
-
-**Substituting the control law into the Lyapunov function gives:**
-
-$$
--2k_1 k_p(x_e V_x + y_e V_y) - 2k_2 L \omega^2 \leq -k_p(x_e V_x + y_e V_y)
+E = \frac{1}{2} k_0 (x_e^2 + y_e^2) + \frac{1}{2} k_1 (V_x^2 + V_y^2) + \frac{1}{2} k_2 \psi_e^2.
 $$
 
-which is negative semi-definite when $k_1 > \frac{1}{2}, k_2 > 0$.
-
-
-#### Steerable Drive Boat:
-
-Given the steerable drive dynamic:
-
+The resulting control laws:
 $$
 \begin{aligned}
-F_x(u) &= u_f \cos(u_\phi)\\
-F_y(u) &= u_f \sin(u_\phi)\\
-M(u) &= L \cdot u_f \sin(u_\phi)\\
+u_f &= k_0 (x_e^2 + y_e^2) - k_1 (x_e V_x + y_e V_y), \\
+u_\phi &= k_2 \psi_e,
 \end{aligned}
 $$
+where \( u_f \) is the thrust magnitude and \( u_\phi \) the steering angle.
 
-Substituting into the derivative of Lyapunov function gives:
+**Implementation Notes:**
+1. **Clipping**:
+   $$
+   u_f = \text{clip}(0, u_f, u_{f_{\text{max}}}), \quad u_\phi = \text{clip}(-u_{\phi_{\text{max}}}, u_\phi, u_{\phi_{\text{max}}}).
+   $$
 
-$$
-V_x u_f \cos(u_\phi) + V_y u_f \sin(u_\phi) + \omega L \cdot u_f \sin(u_\phi) \leq -k_p(x_e V_x + y_e V_y)
-$$
+### Adaptive Control
 
+Building on this foundation, we now extend the energy-based controller to handle wind disturbances through online parameter adaptation
 
-**We can choose the control law as:**
-
-$$
-\begin{aligned}
-u_f &= -k_1 \frac{k_p(x_e V_x + y_e V_y)}{\sqrt{V_x^2 + (V_y + \omega L)^2}} \\
-u_\phi &= \arctan2(V_y + \omega L, V_x) \\
-\end{aligned}
-$$
-
-**Substituting the control law into the Lyapunov function gives:**
-
-$$
--k_1k_p(x_e V_x + y_e V_y)\leq -k_p(x_e V_x + y_e V_y)
-$$
-
-
-which is negative semi-definite when $k_1 > 1$.
-
-
-### Stability Proof:
-1. $V$ is positive definite (always ≥ 0, and = 0 only at desired state)
-2. $\dot{V}$ is negative semi-definite (≤ 0 for all states)
-3. The system is asymptotically stable since $\dot{V} = 0$ only when $V_x = V_y = \omega = 0$
-
-### ----- /|\\ TODO /|\\ ----------
+# TODO:
 
 ## Repository Structure
 
