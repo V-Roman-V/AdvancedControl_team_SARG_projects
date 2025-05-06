@@ -306,7 +306,7 @@ $$
 \mathbf{x}_a = \begin{bmatrix} x, y, \psi, V_x, V_y, \omega, \hat{V}_{w_x}, \hat{V}_{w_y} \end{bmatrix}^T,
 $$
 
-- We have randomly generated 20 differential/steering boats. Each board has initial speed 0 and estimated wind velocity also 0. The initial position and yaw (heading) are arbitrary.
+- We have randomly generated 20 differential/steering boats. Each board has zero initial speeds. The initial position and yaw (heading) are arbitrary.
 
 - **Wind disturbance estimates**: The initial estimates for wind velocities $\hat{V}_{w_x}$ and $\hat{V}_{w_y}$ are initialized to zero.
 
@@ -316,58 +316,37 @@ $$
 
 ## Results
 
-### Old energy-based control with wind: 
+### Old energy-based control with wind:
 
 As we can see the energy-based control that assumes zero wind cannot provide good control to reach zero position.
 
 ![alt text](<simulator/gif/simulation_with_old_control.gif>)
-
-### First iteration of adding wind estimation:
-
-![alt text](simulator/gif/simulation_funny_jumps.gif)  
-![alt text](simulator/gif/simulation_water_slide.gif)
-
-# TODO: update bottom text
-
-The differential drive boat simulation showcases the boat's trajectory and the corresponding phase plot for control. The first image represents the boat's trajectory, with the boat maneuvering through the simulation environment. The second image provides the phase plot, illustrating the relationship between the distance to the target and the angle relative to the target. This demonstrates how the boat adjusts its position and orientation to reach the target efficiently.
-
-![Diff boat](images/Traj_differential_1.png)
-![Diff boat](images/Phase_differential_1.png)
-
-**gif demonstration:**
-
-![alt text](simulator/gif/Differential_gif.gif)
-
-### Steerable Drive Boat
-
-In contrast, the steerable drive boat simulation shows a different type of control mechanism. The trajectory of the steerable boat is illustrated in the first image, while the second image presents the phase plot, which provides insights into the boat's angular correction and distance adjustments relative to the target.
-
-![Steer boat](images/Steerable_1.png)
-![Steer boat](images/Phase_plot_steerable_1.png)
-
-## Energy based control with wind
-
-As we can see the energy-based control that assumes zero wind cannot provide good control to reach zero position.
-
-![alt text](<simulator/gif/simulation_with_old_control.gif>)
+![alt text](<simulator/gif/simulation_energy_based.gif>)
 
 ### Phase plot
 
-![Phase plot for energy based control with wind](images/.png)
+![Phase plot for energy based control with wind](images/energy_based_phase_plot.png)
 
 ## Adaptive control
 
+### First iteration of adding wind estimation
+
+![alt text](simulator/gif/simulation_funny_jumps.gif)
+![alt text](simulator/gif/simulation_water_slide.gif)
+
+### Successfull implementation
+
 We can see that adaptive control can successfully adapt to the wind:
 
-![trajectories](images/.png)
+![trajectories](simulator/gif/simulation_adaptive_control.gif)
 
 ### Phase plot
 
-![Phase plot](images/.png)
+![Phase plot](images/phase_plot_adaptive_control.png)
 
 ### Wind estimation
 
-![Wind estimation](images/.png)
+![Wind estimation](images/wind_estimates.png)
 
 ### Control by time
 
