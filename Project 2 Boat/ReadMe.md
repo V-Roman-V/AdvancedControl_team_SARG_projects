@@ -80,15 +80,7 @@ $$
 F_x(u) \\
 F_y(u) \\
 M(u)
-\end{bmatrix} +
-\begin{bmatrix}
-V_{w_x} \\
-V_{w_y} \\
-0 \\
-0 \\
-0 \\
-0
-\end{bmatrix}.
+\end{bmatrix} + \begin{bmatrix}V_{w_x} \\ V_{w_y} \\ 0 \\ 0 \\ 0 \\ 0 \end{bmatrix}
 $$
 
 where:
@@ -164,15 +156,15 @@ $$
 
 1. **Clipping**: Thrusters are unidirectional, so inputs are saturated:
 
-   $$
-   u_1 = \text{clip}(0, u_1, u_{\text{max}}), \quad u_2 = \text{clip}(0, u_2, u_{\text{max}}).
-   $$
+$$
+u_1 = \text{clip}(0, u_1, u_{max}), \quad u_2 = \text{clip}(0, u_2, u_{max}).
+$$
 
 2. **Turn-around Case**: If both $u_1, u_2 < 0$, the boat must reverse direction. We enforce:
 
-   $$
-   \text{If } u_1 < 0 \text{ and } u_2 < 0, \quad \text{set } u_1 = \frac{1}{2} u_{\text{max}}, u_2 = 0 \text{ (or vice versa)}.
-   $$
+$$
+\text{If } u_1 < 0 \text{ and } u_2 < 0, \quad \text{set } u_1 = \frac{1}{2} u_{max}, u_2 = 0 \text{ (or vice versa)}.
+$$
 
 
 #### **Steerable Drive Boat**
@@ -199,7 +191,7 @@ where $u_f$ is the thrust magnitude and $u_\phi$ the steering angle.
 1. **Clipping**:
 
    $$
-   u_f = \text{clip}(0, u_f, u_{f_{\text{max}}}), \quad u_\phi = \text{clip}(-u_{\phi_{\text{max}}}, u_\phi, u_{\phi_{\text{max}}}).
+   u_f = \text{clip}(0, u_f, u_{f_{max}}), \quad u_\phi = \text{clip}(-u_{\phi_{max}}, u_\phi, u_{\phi_{max}}).
    $$
 
 ### Adaptive Control
@@ -211,23 +203,23 @@ To handle unknown wind disturbances $(V_{w_x}, V_{w_y})$, we augment the energy-
 Define the **augmented state vector** to include wind disturbance estimates:
 
 $$
-\mathbf{x}_a = \begin{bmatrix} x, y, \psi, V_x, V_y, \omega, \hat{V}_{w_x}, \hat{V}_{w_y} \end{bmatrix}^T,
+\mathbf{x}_a = \begin{bmatrix} x, y, \psi, V_x, V_y, \omega, \hat{V}_{wx}, \hat{V}_{wy} \end{bmatrix}^T,
 $$
 
-where $\hat{V}_{w_x}, \hat{V}_{w_y}$ are estimates of the wind velocities.
+where $\hat{V}_{wx}, \hat{V}_{wy}$ are estimates of the wind velocities.
 
 #### **2. Modified Lyapunov Function**  
 
 Introduce a Lyapunov function including estimation errors:
 
 $$
-E_a = E + \frac{1}{2 \gamma_w} \tilde{V}_{w_x}^2 + \frac{1}{2 \gamma_w} \tilde{V}_{w_y}^2,
+E_a = E + \frac{1}{2 \gamma_w} \tilde{V}_{wx}^2 + \frac{1}{2 \gamma_w} \tilde{V}_{wy}^2,
 $$
 
 where:
 
 - $\gamma_x, \gamma_y > 0$ are adaptation gains.
-- $\tilde{V}_{w_x} = V_{w_x} - \hat{V}_{w_x}$ and $\tilde{V}_{w_y} = V_{w_y} - \hat{V}_{w_y}$ are estimation errors.
+- $\tilde{V}_{wx} = V_{wx} - \hat{V}_{wx}$ and $\tilde{V}_{wy} = V_{wy} - \hat{V}_{wy}$ are estimation errors.
 
 #### **3. Adaptation Laws**
 
@@ -235,18 +227,18 @@ Derive adaptation laws by ensuring $\dot{E}_a \leq 0$:
 
 $$
 \begin{aligned}
-\dot{\hat{V}}_{w\_x} &= - \gamma_w \left( \hat{V}_{w\_x} + V_{\text{x\_global}} \right), \\
-\dot{\hat{V}}_{w\_y} &= - \gamma_w \left( \hat{V}_{w\_y} + V_{\text{y\_global}} \right).
+\dot{\hat{V}}_{wx} &= - \gamma_w \left( \hat{V}_{wx} + V_{xGlobal} \right), \\
+\dot{\hat{V}}_{wy} &= - \gamma_w \left( \hat{V}_{wy} + V_{yGlobal} \right).
 \end{aligned}
 $$
 
 where:
-- $V_{\text{x\_global}}$ and $V_{\text{y\_global}}$ are boat speed in global coordinates:
+- $V_{xGlobal}$ and $V_{yGlobal}$ are boat speed in global coordinates:
 
 $$
 \begin{aligned}
-V_{\text{x\_global}} &= \cos(\psi) V_x - \sin(\psi) V_y, \\
-V_{\text{y\_global}} &= \sin(\psi) V_x + \cos(\psi) V_y.
+V_{xGlobal} &= \cos(\psi) V_x - \sin(\psi) V_y, \\
+V_{yGlobal} &= \sin(\psi) V_x + \cos(\psi) V_y.
 \end{aligned}
 $$
 
@@ -256,8 +248,8 @@ $$
 
 $$
 \begin{aligned}
-u_1 &= k_0 x_e - k_1 \left( x_e (V_x - \hat{V}_{w\text{\_x\_local}}) + y_e (V_y - \hat{V}_{w\text{\_y\_local}}) - \omega \right) - k_2 \psi_e - k_w \hat{V}_{w\text{\_x\_local}}, \\
-u_2 &= k_0 x_e - k_1 \left( x_e (V_x - \hat{V}_{w\text{\_x\_local}}) + y_e (V_y - \hat{V}_{w\text{\_y\_local}}) + \omega \right) + k_2 \psi_e - k_w \hat{V}_{w\text{\_x\_local}}.
+u_1 &= k_0 x_e - k_1 \left( x_e (V_x - \hat{V}_{wxLocal}) + y_e (V_y - \hat{V}_{wyLocal}) - \omega \right) - k_2 \psi_e - k_w \hat{V}_{wxLocal}, \\
+u_2 &= k_0 x_e - k_1 \left( x_e (V_x - \hat{V}_{wxLocal}) + y_e (V_y - \hat{V}_{wyLocal}) + \omega \right) + k_2 \psi_e - k_w \hat{V}_{wxLocal}.
 \end{aligned}
 $$
 
@@ -265,18 +257,18 @@ $$
 
 $$
 \begin{aligned}
-u_f &= k_0 (x_e^2 + y_e^2) - k_1 \left( x_e (V_x - \hat{V}_{w\text{\_x\_local}}) + y_e (V_y - \hat{V}_{w\text{\_y\_local}}) \right) - k_w \hat{V}_{w\text{\_x\_local}}, \\
+u_f &= k_0 (x_e^2 + y_e^2) - k_1 \left( x_e (V_x - \hat{V}_{wxLocal}) + y_e (V_y - \hat{V}_{wyLocal}) \right) - k_w \hat{V}_{wxLocal}, \\
 u_\phi &= k_2 \psi_e.
 \end{aligned}
 $$
 
 **where:**
-- $\hat{V}_w\text{\_x\_local}$ and $\hat{V}_{w\text{\_y\_local}}$ are estimated wind in the boat frame:
+- $\hat{V}_{wxLocal}$ and $\hat{V}_{wyLocal}$ are estimated wind in the boat frame:
 
 $$
 \begin{aligned}
-\hat{V}_{w\text{\_x\_local}} &=  \cos(\psi) \dot{\hat{V}}_{w_x} + \sin(\psi) \dot{\hat{V}}_{w_y}, \\
-\hat{V}_{w\text{\_y\_local}} &= -\sin(\psi) \dot{\hat{V}}_{w_x} + \cos(\psi) \dot{\hat{V}}_{w_y}.
+\hat{V}_{wxLocal} &=  \cos(\psi) \dot{\hat{V}}_{wx} + \sin(\psi) \dot{\hat{V}}_{wy}, \\
+\hat{V}_{wyLocal} &= -\sin(\psi) \dot{\hat{V}}_{wx} + \cos(\psi) \dot{\hat{V}}_{wy}.
 \end{aligned}
 $$
 
