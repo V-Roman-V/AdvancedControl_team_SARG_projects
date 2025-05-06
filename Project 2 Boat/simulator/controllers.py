@@ -83,8 +83,8 @@ class DifferentialController(Controller):
         Vy_global = Vx * np.sin(psi) + Vy * np.cos(psi)
         
         # Wind estimation adaptation law (simple proportional update rule)
-        dWx = self.gamma_wind * (-Vx_global - Wx_est)
-        dWy = self.gamma_wind * (-Vy_global - Wy_est)
+        dWx = - self.gamma_wind * (Wx_est + Vx_global)
+        dWy = - self.gamma_wind * (Wy_est + Vy_global)
 
         # Return thruster commands and wind estimation derivatives
         return np.array([u1, u2]), np.array([dWx, dWy])
@@ -147,8 +147,8 @@ class SteeringController(Controller):
         Vy_global = Vx * np.sin(psi) + Vy * np.cos(psi)
         
         # Wind estimation adaptation law (simple proportional update rule)
-        dWx = self.gamma_wind * (-Vx_global - Wx_est)
-        dWy = self.gamma_wind * (-Vy_global - Wy_est)
+        dWx = - self.gamma_wind * (Wx_est + Vx_global)
+        dWy = - self.gamma_wind * (Wy_est + Vy_global)
 
         return np.array([uf, us]), np.array([dWx, dWy])
     
