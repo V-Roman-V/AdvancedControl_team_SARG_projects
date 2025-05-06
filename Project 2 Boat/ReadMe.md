@@ -225,7 +225,9 @@ $$
 \mathbf{x_a} = \begin{bmatrix} x, y, \psi, V_x, V_y, \omega, \hat{V_{wx}}, \hat{V_{wy}} \end{bmatrix}^T,
 $$
 
-where $\hat{V_{wx}}, \hat{V_{wy}}$ are estimates of the wind velocities.
+where $\hat{V_{wx}}, \hat{V_{wy}}$ are estimates of the wind velocities in global frame.
+
+The **main challenges** was to handle the different coordinates systems, as wind given in global coordinates, but boat velocities in local boat frame.
 
 #### **2. Modified Lyapunov Function**  
 
