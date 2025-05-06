@@ -217,23 +217,23 @@ As we can see the energy-based control that assumes zero wind cannot provide goo
 
 ### Adaptive Control
 
-To handle unknown wind disturbances $(V_{wx}, V_{wy})$, we augment the energy-based controller with an adaptation law that estimates and compensates for the wind effects during the work.
+To handle unknown wind disturbances $(V_{wx}, V_{wy})$, we augment the energy-based controller with an adaptation law that adapts and compensates for the wind effects during the work.
 
 #### **1. State Augmentation**
 
-Define the **augmented state vector** to include wind disturbance estimates:
+Define the **augmented state vector** to include wind disturbance adaptation:
 
 $$
 \mathbf{x_a} = \begin{bmatrix} x, y, \psi, V_x, V_y, \omega, \hat{V_{wx}}, \hat{V_{wy}} \end{bmatrix}^T,
 $$
 
-where $\hat{V_{wx}}, \hat{V_{wy}}$ are estimates of the wind velocities in global frame.
+where $\hat{V_{wx}}, \hat{V_{wy}}$ are adaptation parameters of the wind velocities in global frame.
 
 The **main challenges** was to handle the different coordinates systems, as wind given in global coordinates, but boat velocities in local boat frame.
 
 #### **2. Modified Lyapunov Function**  
 
-Introduce a Lyapunov function including estimation errors:
+Introduce a Lyapunov function including adaptation errors:
 
 $$
 E_a = E + \frac{1}{2 \gamma_w} \tilde{V_{wx}}^2 + \frac{1}{2 \gamma_w} \tilde{V_{wy}}^2,
@@ -242,7 +242,7 @@ $$
 where:
 
 - $\gamma_x, \gamma_y > 0$ are adaptation gains.
-- $\tilde{V_{wx}} = V_{wx} - \hat{V_{wx}}$ and $\tilde{V_{wy}} = V_{wy} - \hat{V_{wy}}$ are estimation errors.
+- $\tilde{V_{wx}} = V_{wx} - \hat{V_{wx}}$ and $\tilde{V_{wy}} = V_{wy} - \hat{V_{wy}}$ are adaptation errors.
 
 #### **3. Adaptation Laws**
 
@@ -286,7 +286,7 @@ u_\phi &= k_2 \psi_e.
 $$
 
 **where:**
-- $\hat{V_{wxLocal}}$ and $\hat{V_{wyLocal}}$ are estimated wind in the boat frame:
+- $\hat{V_{wxLocal}}$ and $\hat{V_{wyLocal}}$ are adaptation parameters for wind velocities in the boat frame:
 
 $$
 \begin{aligned}
@@ -334,7 +334,7 @@ $$
 
 - We have randomly generated 20 differential/steering boats. Each board has zero initial speeds. The initial position and yaw (heading) are arbitrary.
 
-- **Wind disturbance estimates**: The initial estimates for wind velocities $\hat{V_{wx}}$ and $\hat{V_{wy}}$ are initialized to zero.
+- **Wind disturbance adaptation**: The initial adaptation parameters for wind velocities $\hat{V_{wx}}$ and $\hat{V_{wy}}$ are initialized to zero.
 
 - **The desired reference trajectory** for each boat is defined by a target position $x_d, y_d$ for convinients every target position were set to origin of the coordinate system.
 
@@ -344,7 +344,7 @@ $$
 
 ## Adaptive control
 
-### First iteration of adding wind estimation
+### First iteration of adding wind adaptation
 
 ![alt text](simulator/gif/simulation_funny_jumps.gif)
 ![alt text](simulator/gif/simulation_water_slide.gif)
@@ -359,9 +359,9 @@ We can see that adaptive control can successfully adapt to the wind:
 
 ![Phase plot](images/phase_plot_adaptive_control.png)
 
-### Wind estimation
+### Wind Adaptation
 
-![Wind estimation](images/wind_estimates.png)
+![Wind adaptation](images/wind_estimates.png)
 
 ### Control by time
 
