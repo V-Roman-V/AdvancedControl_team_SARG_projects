@@ -342,16 +342,6 @@ $$
 
 ## Results
 
-### Old energy-based control with wind:
-
-As we can see the energy-based control that assumes zero wind cannot provide good control to reach zero position.
-
-![alt text](<simulator/gif/simulation_energy_based.gif>)
-
-### Phase plot
-
-![Phase plot for energy based control with wind](images/energy_based_phase_plot.png)
-
 ## Adaptive control
 
 ### First iteration of adding wind estimation
