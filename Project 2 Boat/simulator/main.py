@@ -97,7 +97,7 @@ def generate_random_boats(num_boats, seed=42, goal=(0, 0)):
 
 def main():
     T, dt = 300, 1
-    wind_velocity = (0.06, 0)
+    wind_velocity = (0.04, -0.03)
     boat_types, init_states, desired_states = generate_random_boats(20)
     sim = Simulation(T, dt, 'gif', wind_velocity, boat_types)
     sim.initialize(init_states, desired_states)

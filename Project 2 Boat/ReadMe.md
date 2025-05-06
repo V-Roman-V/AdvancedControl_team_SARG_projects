@@ -220,8 +220,18 @@ where:
 Derive adaptation laws by ensuring \( \dot{E}_a \leq 0 \):
 $$
 \begin{aligned}
-\dot{\hat{V}}_{w_x} &= \gamma_w \left( k_0 x_e + k_1 \dot{V}_x \right), \\
-\dot{\hat{V}}_{w_y} &= \gamma_w \left( k_0 y_e + k_1 \dot{V}_y \right).
+\dot{\hat{V}}_{w_x} &= - \gamma_w \left( \hat{V}_{w_x} + V_{\text{x_global}} \right), \\
+\dot{\hat{V}}_{w_y} &= - \gamma_w \left( \hat{V}_{w_y} + V_{\text{y_global}} \right).
+\end{aligned}
+$$
+
+where:
+- $V_{\text{x_global}}$ and $V_{\text{y_global}}$ are boat speed in global coordinates:
+
+$$
+\begin{aligned}
+V_{\text{x_global}} &= \cos(\psi) V_x - \sin(\psi) V_y, \\
+V_{\text{y_global}} &= \sin(\psi) V_x + \sin(\psi) V_y.
 \end{aligned}
 $$
 
@@ -229,16 +239,26 @@ $$
 **Differential Drive:**
 $$
 \begin{aligned}
-u_1 &= k_0 x_e - k_1 \left( x_e (V_x - \hat{V}_{w_x}) + y_e (V_y - \hat{V}_{w_y}) - \omega \right) - k_2 \psi_e, \\
-u_2 &= k_0 x_e - k_1 \left( x_e (V_x - \hat{V}_{w_x}) + y_e (V_y - \hat{V}_{w_y}) + \omega \right) + k_2 \psi_e.
+u_1 &= k_0 x_e - k_1 \left( x_e (V_x - \hat{V}_{w\text{_x_local}}) + y_e (V_y - \hat{V}_{w\text{_y_local}}) - \omega \right) - k_2 \psi_e - k_w \hat{V}_{w\text{_x_local}}, \\
+u_2 &= k_0 x_e - k_1 \left( x_e (V_x - \hat{V}_{w\text{_x_local}}) + y_e (V_y - \hat{V}_{w\text{_y_local}}) + \omega \right) + k_2 \psi_e - k_w \hat{V}_{w\text{_x_local}}.
 \end{aligned}
 $$
 
 **Steerable Drive:**
 $$
 \begin{aligned}
-u_f &= k_0 (x_e^2 + y_e^2) - k_1 \left( x_e (V_x - \hat{V}_{w_x}) + y_e (V_y - \hat{V}_{w_y}) \right), \\
+u_f &= k_0 (x_e^2 + y_e^2) - k_1 \left( x_e (V_x - \hat{V}_{w\text{_x_local}}) + y_e (V_y - \hat{V}_{w\text{_y_local}}) \right) - k_w \hat{V}_{w\text{_x_local}}, \\
 u_\phi &= k_2 \psi_e.
+\end{aligned}
+$$
+
+**where:**
+- $\hat{V}_{w\text{_x_local}}$ and $\hat{V}_{w\text{_y_local}}$ are estimated wind in the boat frame:
+
+$$
+\begin{aligned}
+\hat{V}_{w\text{_x_local}} &=  \cos(\psi) \dot{\hat{V}}_{w_x} + \sin(\psi) \dot{\hat{V}}_{w_y}, \\
+\hat{V}_{w\text{_y_local}} &= -\sin(\psi) \dot{\hat{V}}_{w_x} + \sin(\psi) \dot{\hat{V}}_{w_y}.
 \end{aligned}
 $$
 
