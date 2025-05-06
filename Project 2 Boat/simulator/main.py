@@ -57,13 +57,14 @@ class Simulation:
                 self.trajectories[i].append(state)
                 states.append(state[:3])
                 controls.append(u)
-
+                self.control_histories[i].append(u)
             # Update visualization
             if frame % self.update_vis_every_n_frame == 0:
                 self.visualizer.update(states, self.trajectories, t, controls, self.dt * self.update_vis_every_n_frame)
         print("finalize")
         self.visualizer.create_target_phase_plot(self.trajectories, self.visualizer.desired_trajs, save_path='target_phase_plot.png')
         self.visualizer.create_estimated_wind_plot(self.trajectories, self.wind_velocity, save_path='wind_estimates_plot.png')
+        self.visualizer.create_control_plot(self.control_histories, self.boat_types, save_path='control_plot.png')
         self.visualizer.finalize()
 
 def generate_random_boats(num_boats, seed=42, goal=(0, 0)):
@@ -99,7 +100,7 @@ def main():
     T, dt = 300, 1
     wind_velocity = (0.04, -0.03)
     boat_types, init_states, desired_states = generate_random_boats(20)
-    sim = Simulation(T, dt, 'gif', wind_velocity, boat_types)
+    sim = Simulation(T, dt, 'final', wind_velocity, boat_types)
     sim.initialize(init_states, desired_states)
     sim.simulate()
     sim.print_wind()

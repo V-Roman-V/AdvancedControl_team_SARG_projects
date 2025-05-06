@@ -285,3 +285,83 @@ class BoatVisualizer:
             print(f"Wind estimation plots saved to {save_path}")
         
         # plt.show()
+    def create_control_plot(self, control_histories, boat_types, save_path=None):
+        """Create separate control input plots for differential and steerable boats.
+        
+        Args:
+            control_histories: List of control input histories, where each history is a list of (u1, u2) or (uf, us) tuples.
+            boat_types: List of boat types for each boat ('differential' or 'steerable').
+            save_path: Optional path to save the figure
+        """
+        # Separate control histories by type
+        diff_indices = [i for i, t in enumerate(boat_types) if t == 'differential']
+        steer_indices = [i for i, t in enumerate(boat_types) if t == 'steerable']
+    
+        # Create figure for differential boats if any
+        if diff_indices:
+            fig_diff, (ax1_diff, ax2_diff) = plt.subplots(2, 1, num=4, figsize=(10, 10))
+            num_steps = len(control_histories[diff_indices[0]])
+            time = np.arange(num_steps)
+    
+            for i in diff_indices:
+                controls = control_histories[i]
+                u1 = [c[0] for c in controls]
+                u2 = [c[1] for c in controls]
+                color = self.colors[i % len(self.colors)]
+                label = f'Boat {i+1} (Differential)'
+    
+                ax1_diff.plot(time, u1, color=color, label=label)
+                ax2_diff.plot(time, u2, color=color, label=label)
+    
+            ax1_diff.set_title('Differential Boat: Left Thrust (u1) over Time')
+            ax1_diff.set_ylabel('Thrust (N)')
+            ax1_diff.grid(True)
+            ax1_diff.legend(loc='upper right')
+    
+            ax2_diff.set_title('Differential Boat: Right Thrust (u2) over Time')
+            ax2_diff.set_xlabel('Time Step')
+            ax2_diff.set_ylabel('Thrust (N)')
+            ax2_diff.grid(True)
+            ax2_diff.legend(loc='upper right')
+    
+            plt.tight_layout()
+    
+            if save_path:
+                diff_path = save_path.replace('.png', '_differential.png')
+                fig_diff.savefig(diff_path)
+                print(f"Differential control plot saved to {diff_path}")
+    
+        # Create figure for steerable boats if any
+        if steer_indices:
+            fig_steer, (ax1_steer, ax2_steer) = plt.subplots(2, 1, num=5, figsize=(10, 10))
+            num_steps = len(control_histories[steer_indices[0]])
+            time = np.arange(num_steps)
+    
+            for i in steer_indices:
+                controls = control_histories[i]
+                uf = [c[0] for c in controls]
+                us = [c[1] for c in controls]
+                color = self.colors[i % len(self.colors)]
+                label = f'Boat {i+1} (Steerable)'
+    
+                ax1_steer.plot(time, uf, color=color, label=label)
+                ax2_steer.plot(time, us, color=color, label=label)
+    
+            ax1_steer.set_title('Steerable Boat: Forward Thrust (uf) over Time')
+            ax1_steer.set_ylabel('Thrust (N)')
+            ax1_steer.grid(True)
+            ax1_steer.legend(loc='upper right')
+    
+            ax2_steer.set_title('Steerable Boat: Steering Angle (us) over Time')
+            ax2_steer.set_xlabel('Time Step')
+            ax2_steer.set_ylabel('Angle (rad)')
+            ax2_steer.grid(True)
+            ax2_steer.legend(loc='upper right')
+    
+            plt.tight_layout()
+    
+            if save_path:
+                steer_path = save_path.replace('.png', '_steerable.png')
+                fig_steer.savefig(steer_path)
+                print(f"Steerable control plot saved to {steer_path}")
+    

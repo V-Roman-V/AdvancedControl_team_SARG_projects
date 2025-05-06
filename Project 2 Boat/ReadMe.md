@@ -350,4 +350,11 @@ We can see that adaptive control can successfully adapt to the wind:
 
 ### Control by time
 
-![Control by time](images/.png)
+#### Control for differential boats
+
+![Control by time](images/control_plot_differential.png)
+
+#### Control for steerable boats
+
+![Control by time](images/control_plot_steerable.png)
+
