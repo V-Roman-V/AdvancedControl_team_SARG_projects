@@ -11,6 +11,9 @@ This project is focused on the **control** of a motorized boat using adaptive-ba
 Given the initial state $\mathbf{x}_i$ and a desired position $\mathbf{x}_d$, the goal is to design a control law $\mathbf{u} = [u_1, u_2]^T$ such that the boat will reach the desired position with zero velocity, despite wind disturbances.
 The boat can finish at any angle. The thruster force can only be applied in the forward direction.
 
+### Results of old controller for the new task definition
+![alt text](<simulator/gif/simulation_with_old_control.gif>)
+
 ## Mathematical Model
 
 ### Boat Kinematics
@@ -206,7 +209,6 @@ $$
 
 As we can see the energy-based control that assumes zero wind cannot provide good control to reach zero position.
 
-![alt text](<simulator/gif/simulation_with_old_control.gif>)
 ![alt text](<simulator/gif/simulation_energy_based.gif>)
 
 ### Phase plot
@@ -339,6 +341,16 @@ $$
 - **Simulation duration**: The simulation runs for a total time of $T = 300$ seconds, with a time step $\Delta t = 1$ second.
 
 ## Results
+
+### Old energy-based control with wind:
+
+As we can see the energy-based control that assumes zero wind cannot provide good control to reach zero position.
+
+![alt text](<simulator/gif/simulation_energy_based.gif>)
+
+### Phase plot
+
+![Phase plot for energy based control with wind](images/energy_based_phase_plot.png)
 
 ## Adaptive control
 
