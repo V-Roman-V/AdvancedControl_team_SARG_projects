@@ -190,9 +190,58 @@ where \( u_f \) is the thrust magnitude and \( u_\phi \) the steering angle.
 
 ### Adaptive Control
 
-Building on this foundation, we now extend the energy-based controller to handle wind disturbances through online parameter adaptation
+To handle unknown wind disturbances $ (V_{w_x}, V_{w_y}) $, we augment the energy-based controller with an adaptation law that estimates and compensates for the wind effects during the work.
 
-# TODO:
+#### **1. State Augmentation**
+
+Define the **augmented state vector** to include wind disturbance estimates:
+
+$$
+\mathbf{x}_a = \begin{bmatrix} x, y, \psi, V_x, V_y, \omega, \hat{V}_{w_x}, \hat{V}_{w_y} \end{bmatrix}^T,
+$$
+
+where $\hat{V}_{w_x}, \hat{V}_{w_y}$ are estimates of the wind velocities.
+
+#### **2. Modified Lyapunov Function**  
+
+Introduce a Lyapunov function including estimation errors:
+
+$$
+E_a = E + \frac{1}{2 \gamma_x} \tilde{V}_{w_x}^2 + \frac{1}{2 \gamma_y} \tilde{V}_{w_y}^2,
+$$
+
+where:
+- $\gamma_x, \gamma_y > 0$ are adaptation gains.
+- $\tilde{V}_{w_x} = V_{w_x} - \hat{V}_{w_x}$ and $\tilde{V}_{w_y} = V_{w_y} - \hat{V}_{w_y}$ are estimation errors.
+
+
+#### **3. Adaptation Laws**
+
+Derive adaptation laws by ensuring \( \dot{E}_a \leq 0 \):
+$$
+\begin{aligned}
+\dot{\hat{V}}_{w_x} &= \gamma_x \left( k_0 x_e + k_1 \dot{V}_x \right), \\
+\dot{\hat{V}}_{w_y} &= \gamma_y \left( k_0 y_e + k_1 \dot{V}_y \right).
+\end{aligned}
+$$
+
+#### **4. Adaptive Control Laws**
+**Differential Drive:**
+Modify the original control inputs to compensate for estimated wind:
+$$
+\begin{aligned}
+u_1 &= k_0 x_e - k_1 \left( x_e (V_x - \hat{V}_{w_x}) + y_e (V_y - \hat{V}_{w_y}) - \omega \right) - k_2 \psi_e, \\
+u_2 &= k_0 x_e - k_1 \left( x_e (V_x - \hat{V}_{w_x}) + y_e (V_y - \hat{V}_{w_y}) + \omega \right) + k_2 \psi_e.
+\end{aligned}
+$$
+
+**Steerable Drive:**
+$$
+\begin{aligned}
+u_f &= k_0 (x_e^2 + y_e^2) - k_1 \left( x_e (V_x - \hat{V}_{w_x}) + y_e (V_y - \hat{V}_{w_y}) \right), \\
+u_\phi &= k_2 \psi_e.
+\end{aligned}
+$$
 
 ## Repository Structure
 
