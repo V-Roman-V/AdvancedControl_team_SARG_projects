@@ -80,7 +80,15 @@ $$
 F_x(u) \\
 F_y(u) \\
 M(u)
-\end{bmatrix} + \begin{bmatrix}V_{wx} \\ V_{wy} \\ 0 \\ 0 \\ 0 \\ 0 \end{bmatrix}
+\end{bmatrix} +
+\begin{bmatrix}
+Vwx \\
+Vwy \\
+0   \\
+0   \\
+0   \\
+\omega
+\end{bmatrix}
 $$
 
 where:
@@ -190,9 +198,9 @@ where $u_f$ is the thrust magnitude and $u_\phi$ the steering angle.
 
 1. **Clipping**:
 
-   $$
-   u_f = \text{clip}(0, u_f, u_{f Max}), \quad u_\phi = \text{clip}(-u_{\phi Max}, u_\phi, u_{\phi Max}).
-   $$
+$$
+u_f = \text{clip}(0, u_f, u_{f Max}), \quad u_\phi = \text{clip}(-u_{\phi Max}, u_\phi, u_{\phi Max}).
+$$
 
 ### Adaptive Control
 
@@ -203,7 +211,7 @@ To handle unknown wind disturbances $(V_{wx}, V_{wy})$, we augment the energy-ba
 Define the **augmented state vector** to include wind disturbance estimates:
 
 $$
-\mathbf{x}_a = \begin{bmatrix} x, y, \psi, V_x, V_y, \omega, \hat{V_{wx}}, \hat{V_{wy}} \end{bmatrix}^T,
+\mathbf{x_a} = \begin{bmatrix} x, y, \psi, V_x, V_y, \omega, \hat{V_{wx}}, \hat{V_{wy}} \end{bmatrix}^T,
 $$
 
 where $\hat{V_{wx}}, \hat{V_{wy}}$ are estimates of the wind velocities.
@@ -213,7 +221,7 @@ where $\hat{V_{wx}}, \hat{V_{wy}}$ are estimates of the wind velocities.
 Introduce a Lyapunov function including estimation errors:
 
 $$
-E_a = E + \frac{1}{2 \gamma_w} \tilde{V}_{wx}^2 + \frac{1}{2 \gamma_w} \tilde{V}_{wy}^2,
+E_a = E + \frac{1}{2 \gamma_w} \tilde{V_{wx}}^2 + \frac{1}{2 \gamma_w} \tilde{V_{wy}}^2,
 $$
 
 where:
@@ -267,8 +275,8 @@ $$
 
 $$
 \begin{aligned}
-\hat{V_{wxLocal}} &=  \cos(\psi) \dot{\hat{V}_{wx}} + \sin(\psi) \dot{\hat{V}_{wy}}, \\
-\hat{V_{wyLocal}} &= -\sin(\psi) \dot{\hat{V}_{wx}} + \cos(\psi) \dot{\hat{V}_{wy}}.
+\hat{V_{wxLocal}} &=  \cos(\psi) \dot{\hat{V_{wx}}} + \sin(\psi) \dot{\hat{V_{wy}}}, \\
+\hat{V_{wyLocal}} &= -\sin(\psi) \dot{\hat{V_{wx}}} + \cos(\psi) \dot{\hat{V_{wy}}}.
 \end{aligned}
 $$
 
