@@ -207,11 +207,11 @@ where $\hat{V}_{w_x}, \hat{V}_{w_y}$ are estimates of the wind velocities.
 Introduce a Lyapunov function including estimation errors:
 
 $$
-E_a = E + \frac{1}{2 \gamma_x} \tilde{V}_{w_x}^2 + \frac{1}{2 \gamma_y} \tilde{V}_{w_y}^2,
+E_a = E + \frac{1}{2 \gamma_w} \tilde{V}_{w_x}^2 + \frac{1}{2 \gamma_w} \tilde{V}_{w_y}^2,
 $$
 
 where:
-- $\gamma_x, \gamma_y > 0$ are adaptation gains.
+- $\gamma_w,$ is adaptation gain.
 - $\tilde{V}_{w_x} = V_{w_x} - \hat{V}_{w_x}$ and $\tilde{V}_{w_y} = V_{w_y} - \hat{V}_{w_y}$ are estimation errors.
 
 
@@ -220,14 +220,13 @@ where:
 Derive adaptation laws by ensuring \( \dot{E}_a \leq 0 \):
 $$
 \begin{aligned}
-\dot{\hat{V}}_{w_x} &= \gamma_x \left( k_0 x_e + k_1 \dot{V}_x \right), \\
-\dot{\hat{V}}_{w_y} &= \gamma_y \left( k_0 y_e + k_1 \dot{V}_y \right).
+\dot{\hat{V}}_{w_x} &= \gamma_w \left( k_0 x_e + k_1 \dot{V}_x \right), \\
+\dot{\hat{V}}_{w_y} &= \gamma_w \left( k_0 y_e + k_1 \dot{V}_y \right).
 \end{aligned}
 $$
 
 #### **4. Adaptive Control Laws**
 **Differential Drive:**
-Modify the original control inputs to compensate for estimated wind:
 $$
 \begin{aligned}
 u_1 &= k_0 x_e - k_1 \left( x_e (V_x - \hat{V}_{w_x}) + y_e (V_y - \hat{V}_{w_y}) - \omega \right) - k_2 \psi_e, \\
@@ -277,6 +276,11 @@ python main.py
 As we can see the energy-based control that assumes zero wind cannot provide good control to reach zero position.
 
 ![alt text](<simulator/gif/simulation_with_old_control.gif>)
+
+### First iteration of adding wind estimation:
+
+![alt text](simulator/gif/simulation_funny_jumps.gif)  
+![alt text](simulator/gif/simulation_water_slide.gif)
 
 # TODO: update bottom text
 

@@ -41,6 +41,12 @@ class Simulation:
             wind_velocity=self.wind_velocity,
         )
 
+    def print_wind(self):
+        for type, boat in zip(self.boat_types, self.boats):
+            print(f"{boat.state.Wx:.3f}, {boat.state.Wy:.3f}, | {type}")
+        print('-----')
+        print(self.wind_velocity)
+
     def simulate(self):
         for frame, t in enumerate(tqdm(self.time)):
             states, controls = [], []
@@ -96,6 +102,7 @@ def main():
     sim = Simulation(T, dt, 'gif', wind_velocity, boat_types)
     sim.initialize(init_states, desired_states)
     sim.simulate()
+    sim.print_wind()
 
 if __name__ == "__main__":
     main()

@@ -42,14 +42,14 @@ class BoatVisualizer:
         self.ax.set_aspect('equal', adjustable='box')
 
         # Create legend handles for boat types
-        type_to_color = {}
-        for i, boat_type in enumerate(self.boat_types):
-            if boat_type not in type_to_color:
-                type_to_color[boat_type] = self.colors[i]
+        self.type_to_color = {
+            'differential': 'red', 
+            'steerable': 'blue'
+        }
 
         self.boat_type_legend_handles = [
-            Line2D([0], [0], color=type_to_color[btype], lw=4, label=f'{btype.capitalize()} Boat')
-            for btype in type_to_color
+            Line2D([0], [0], color=self.type_to_color[btype], lw=4, label=f'{btype.capitalize()} Boat')
+            for btype in self.type_to_color
         ]
 
         if self.mode == 'realtime':
@@ -61,7 +61,7 @@ class BoatVisualizer:
         rotation = np.array([[np.cos(psi), -np.sin(psi)],
                              [np.sin(psi),  np.cos(psi)]])
         rotated_points = (rotation @ points).T + [x, y]
-        return Polygon(rotated_points, closed=True, color=color, alpha=0.8)
+        return Polygon(rotated_points, closed=True, color=color, alpha=0.5)
 
     def _initialize_wind_dots(self, x_lim, y_lim):
         """Initialize wind dots within the given plot limits"""
@@ -126,10 +126,19 @@ class BoatVisualizer:
 
         self._update_wind_dots(x_lim, y_lim, dt=dt)
 
+        # Add boat type color legend
+        if self.wind_dots is not None:
+            all_handles = self.boat_type_legend_handles + list([self.wind_dots])
+            all_labels = [h.get_label() for h in self.boat_type_legend_handles] + ['wind']
+        else:
+            all_handles = self.boat_type_legend_handles
+            all_labels = [h.get_label() for h in self.boat_type_legend_handles] 
+        self.ax.legend(all_handles, all_labels, loc='upper right')
+
         # Update boats
         for i in range(self.num_boats):
             x, y, psi = current_states[i]
-            boat_color = self.colors[i % len(self.colors)]
+            boat_color = self.type_to_color[self.boat_types[i]]
             boat_patch = self._create_boat_triangle(x, y, psi, color=boat_color)
             self.boat_patches.append(boat_patch)
             self.ax.add_patch(boat_patch)
@@ -153,17 +162,13 @@ class BoatVisualizer:
         for i in range(self.num_boats):
             traj = np.array(trajectories[i])
             if len(self.trajectory_lines) <= i:
-                traj_line, = self.ax.plot([], [], ':', color=self.colors[i],
-                                          label=f'Boat {i+1} Path')
+                traj_line, = self.ax.plot([], [], ':', color=self.type_to_color[self.boat_types[i]], label=f'Boat {i+1} Path')
                 self.trajectory_lines.append(traj_line)
             self.trajectory_lines[i].set_data(traj[:,0], traj[:,1])
 
         for i, desired_traj in enumerate(self.desired_trajs):
             if len(self.desired_traj_lines) <= i:
-                desired_line, = self.ax.plot(
-                    desired_traj[0], desired_traj[1], 'o',
-                    color=self.colors[i], label=f'Boat {i+1} Desired'
-                )
+                desired_line, = self.ax.plot(desired_traj[0], desired_traj[1], 'o', color=self.type_to_color[self.boat_types[i]], label=f'Boat {i+1} Desired')
                 self.desired_traj_lines.append(desired_line)
 
     def finalize(self, save_path='./gif/simulation.gif'):
