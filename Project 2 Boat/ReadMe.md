@@ -314,12 +314,12 @@ python main.py
 - **Initial state ($\mathbf{x}_i$)**:
 
 $$
-\mathbf{x}_a = \begin{bmatrix} x, y, \psi, V_x, V_y, \omega, \hat{V}_{wx}, \hat{V}_{wy} \end{bmatrix}^T,
+\mathbf{x_a} = \begin{bmatrix} x, y, \psi, V_x, V_y, \omega, \hat{V_{wx}}, \hat{V_{wy}} \end{bmatrix}^T,
 $$
 
 - We have randomly generated 20 differential/steering boats. Each board has zero initial speeds. The initial position and yaw (heading) are arbitrary.
 
-- **Wind disturbance estimates**: The initial estimates for wind velocities $\hat{V}_{wx}$ and $\hat{V}_{wy}$ are initialized to zero.
+- **Wind disturbance estimates**: The initial estimates for wind velocities $\hat{V_{wx}}$ and $\hat{V_{wy}}$ are initialized to zero.
 
 - **The desired reference trajectory** for each boat is defined by a target position $x_d, y_d$ for convinients every target position were set to origin of the coordinate system.
 
