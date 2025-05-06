@@ -13,7 +13,7 @@ class Controller:
         Compute control inputs based on the current state and desired state.
 
         Args:
-            state: Current state [x, y, psi, Vx, Vy, omega]
+            state: Current state [x, y, psi, Vx, Vy, omega, Wx, Wy]
             state_des: Desired state [x_d, y_d, psi_d, Vx_d, Vy_d, omega_d]
         """
         raise NotImplementedError("Dynamics method not implemented.")
@@ -32,6 +32,8 @@ class DifferentialController(Controller):
         self.k_1 = 6  # Velocity-position error gain
         self.k_2 = 1.4  # Heading error gain
 
+        self.gamma_wind = 0  # wind coefficient
+
     def compute_control(self, state: np.array, state_des: np.array) -> np.ndarray:
         """
         Energy-based control computation with clear steps
@@ -40,7 +42,7 @@ class DifferentialController(Controller):
             np.ndarray: Thruster commands [u1, u2]
         """
         # --- Step 1: Extract states ---
-        x, y, psi, Vx, Vy, omega = state
+        x, y, psi, Vx, Vy, omega, Wx_est, Wy_est = state
         x_d, y_d = state_des[:2]
         
         # --- Step 2: Calculating errors in the body-fixed frame ---
@@ -67,7 +69,11 @@ class DifferentialController(Controller):
         u1 = np.clip(u1, 0, self.control_limit)
         u2 = np.clip(u2, 0, self.control_limit)
         
-        return np.array([u1, u2])
+        # Wind estimation: update wind derivative
+        dWx = self.gamma_wind * 0
+        dWy = self.gamma_wind * 0
+
+        return np.array([u1, u2]), np.array([dWx, dWy])
 
 class SteeringController(Controller):
     """
@@ -82,6 +88,8 @@ class SteeringController(Controller):
         self.k_1 = 3  # Velocity-position error gain
         self.k_2 = 0.1  # Heading error gain
 
+        self.gamma_wind = 0  # wind coefficient
+
     def compute_control(self, state: np.array, state_des: np.array) -> np.ndarray:
         """
         Energy-based control computation with clear steps
@@ -90,7 +98,7 @@ class SteeringController(Controller):
             np.ndarray: Thruster commands [u_forward, u_steer]
         """
         # --- Step 1: Extract states ---
-        x, y, psi, Vx, Vy, omega = state
+        x, y, psi, Vx, Vy, omega, Wx_est, Wy_est = state
         x_d, y_d = state_des[:2]
         
         # --- Step 2: Calculating errors in the body-fixed frame ---
@@ -108,7 +116,11 @@ class SteeringController(Controller):
         uf = np.clip(uf, 0, self.control_limit[0])
         us = np.clip(self._wrap_angle(us), -self.control_limit[1], self.control_limit[1])
 
-        return np.array([uf, us])
+        # Wind estimation: update wind derivative
+        dWx = self.gamma_wind * 0
+        dWy = self.gamma_wind * 0
+
+        return np.array([uf, us]), np.array([dWx, dWy])
     
     def _wrap_angle(self,angle):
         """

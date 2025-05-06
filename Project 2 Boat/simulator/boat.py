@@ -11,21 +11,23 @@ class BoatState:
     Vx: float  # Body-frame x velocity
     Vy: float  # Body-frame y velocity
     omega: float
+    Wx: float # estimation of the Wind: global x velocity
+    Wy: float # estimation of the Wind: global y velocity  
 
     @classmethod
     def from_array(cls, arr: np.ndarray) -> 'BoatState':
         """Creates a BoatState object from a numpy array."""
-        if len(arr) != 6:
-            raise ValueError("Array must have exactly 6 elements.")
-        return cls(arr[0], arr[1], arr[2], arr[3], arr[4], arr[5])
+        if len(arr) != 8:
+            raise ValueError("Array must have exactly 8 elements.")
+        return cls(arr[0], arr[1], arr[2], arr[3], arr[4], arr[5], arr[6], arr[7])
 
     def to_array(self) -> np.ndarray:
         """Converts the boat state to a numpy array."""
-        return np.array([self.x, self.y, self.psi, self.Vx, self.Vy, self.omega])
+        return np.array([self.x, self.y, self.psi, self.Vx, self.Vy, self.omega, self.Wx, self.Wy])
 
     def update(self, derivatives: np.ndarray, dt: float) -> None:
         """Updates the boat state using Euler integration."""
-        if len(derivatives) != 6:
+        if len(derivatives) != 8:
             raise ValueError("Derivatives must have exactly 6 elements.")
         self.x += derivatives[0] * dt
         self.y += derivatives[1] * dt
@@ -33,6 +35,8 @@ class BoatState:
         self.Vx += derivatives[3] * dt
         self.Vy += derivatives[4] * dt
         self.omega += derivatives[5] * dt
+        self.Wx += derivatives[6] * dt
+        self.Wy += derivatives[7] * dt
 
 
 @dataclass
@@ -90,9 +94,9 @@ class Boat:
         domega = (M / self.params.inertia) - self.params.damping[2] * self.state.omega
         return np.array([dx, dy, dpsi, dVx, dVy, domega])
 
-    def update_state(self, control: np.ndarray, dt: float) -> None:
+    def update_state(self, control: np.ndarray, wind_derivatives: np.ndarray, dt: float) -> None:
         """Updates state using Euler integration."""
-        derivatives = self.dynamics(control)
+        derivatives = np.concatenate([self.dynamics(control), wind_derivatives])
         self.state.update(derivatives, dt)
 
 

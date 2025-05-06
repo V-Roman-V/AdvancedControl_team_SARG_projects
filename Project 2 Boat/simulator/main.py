@@ -46,8 +46,8 @@ class Simulation:
             states, controls = [], []
             for i, boat in enumerate(self.boats):
                 state = boat.state.to_array()
-                u = self.controllers[i].compute_control(state, self.visualizer.desired_trajs[i])
-                boat.update_state(u, self.dt)
+                u, wind_derivatives = self.controllers[i].compute_control(state, self.visualizer.desired_trajs[i])
+                boat.update_state(u, wind_derivatives, self.dt)
                 self.trajectories[i].append(state)
                 states.append(state[:3])
                 controls.append(u)
@@ -79,12 +79,12 @@ def generate_random_boats(num_boats, seed=42, goal=(0, 0)):
         x = np.random.uniform(-10, 10)
         y = np.random.uniform(-10, 10)
         psi = np.random.uniform(-np.pi, np.pi)
-        init_states.append(BoatState(x, y, psi, 0, 0, 0))
+        init_states.append(BoatState(x, y, psi, 0, 0, 0, 0, 0))
 
         # Slightly jitter the goal to make them non-identical
         dx = goal[0] # + np.random.uniform(-1.0, 1.0)
         dy = goal[1] # + np.random.uniform(-1.0, 1.0)
-        desired_states.append(BoatState(dx, dy, np.pi, 0, 0, 0))
+        desired_states.append(BoatState(dx, dy, np.pi, 0, 0, 0, 0, 0))
 
     return boat_types, init_states, desired_states
 
