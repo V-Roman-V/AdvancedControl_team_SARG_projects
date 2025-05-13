@@ -5,11 +5,12 @@ import imageio
 from matplotlib.cm import ScalarMappable
 from matplotlib.colors import Normalize
 from matplotlib.lines import Line2D
+from wind_generator import WindField
 
 class BoatVisualizer:
-    def __init__(self, mode='realtime', desired_trajectories=None, control_limits=None, boat_types=None, wind_velocity=(0,0)):
+    def __init__(self, mode='realtime', desired_trajectories=None, control_limits=None, boat_types=None, wind_field: WindField = None):
         self.mode = mode
-        self.wind_velocity = np.array(wind_velocity)
+        self.wind_field : WindField = wind_field
         self.fig, self.ax = plt.subplots(figsize=(10, 8))
         self.boat_patches = []
         self.trajectory_lines = []
@@ -86,7 +87,11 @@ class BoatVisualizer:
             return
 
         # Move dots with wind velocity
-        self.wind_dot_positions += self.wind_velocity * dt
+        for i in range(len(self.wind_dot_positions)):
+            dot_pos =self.wind_dot_positions[i]
+            wind = self.wind_field.get_wind([dot_pos[0], dot_pos[1]])
+            self.wind_dot_positions[i, 0] += wind[0] * dt
+            self.wind_dot_positions[i, 1] += wind[1] * dt
 
         # Check boundaries and reset dots that go out of bounds
         reach_x_max = self.wind_dot_positions[:, 0] > x_lim[1]
@@ -122,7 +127,7 @@ class BoatVisualizer:
         self.ax.set_xlim(x_lim)
         self.ax.set_ylim(y_lim)
 
-        if self.wind_dots is None and np.any(self.wind_velocity != 0):
+        if self.wind_dots is None and self.wind_field is not None:
             self._initialize_wind_dots(x_lim, y_lim)
 
         self._update_wind_dots(x_lim, y_lim, dt=dt)
@@ -233,13 +238,12 @@ class BoatVisualizer:
         
         # plt.show()
 
-    def create_estimated_wind_plot(self, trajectories, wind_velocity, save_path=None):
+    def create_estimated_wind_plot(self, trajectories, save_path=None):
         """Create plots showing wind velocity estimates for all boats over time.
         
         Args:
             trajectories: List of boat trajectories, where each trajectory is 
                         a list of BoatState objects
-            wind_velocity: Tuple (true_wind_x, true_wind_y)
             save_path: Optional path to save the figure
         """
         fig, (ax1, ax2) = plt.subplots(2, 1, num=3, figsize=(10, 10))
@@ -249,23 +253,24 @@ class BoatVisualizer:
         time = np.arange(num_steps)  # Using step indices as time
         
         # Plot estimates for each boat
-        for i, boat_traj in enumerate(trajectories):
+        for i in [1]:
+            boat_traj = trajectories[i]
             # Extract wind estimates from boat states
             wx_estimates = [state[6] for state in boat_traj]
             wy_estimates = [state[7] for state in boat_traj]
             
+            true_x_wind = [self.wind_field.get_wind([s[0], s[1]])[0] for s in boat_traj]
+            true_y_wind = [self.wind_field.get_wind([s[0], s[1]])[1] for s in boat_traj]
+
             color = self.colors[i % len(self.colors)]
             label = f'Boat {i+1} ({self.boat_types[i]})'
             
             ax1.plot(time, wx_estimates, color=color, label=label)
             ax2.plot(time, wy_estimates, color=color, label=label)
-        
-        # Plot true wind values
-        ax1.axhline(wind_velocity[0], color='black', linestyle='--', 
-                linewidth=2, label='True Wind X')
-        ax2.axhline(wind_velocity[1], color='black', linestyle='--',
-                linewidth=2, label='True Wind Y')
-        
+
+            ax1.plot(time, true_x_wind, color='black', linestyle='--', linewidth=2, label='True Wind X')
+            ax2.plot(time, true_y_wind, color='black', linestyle='--', linewidth=2, label='True Wind Y')
+
         # Configure plots
         ax1.set_title('Wind X Component Estimates')
         ax1.set_ylabel('Velocity (m/s)')

@@ -12,3 +12,9 @@ Group repository for projects on the Advanced Control course
 
 ### Adaptive control to handle wind disturbance:   
 ![alt text](<Project 2 Boat/simulator/gif/simulation.gif>)
+
+### Adaptive control to handle wind vector field:
+
+![Wind field](<Project 2 Boat/images/Find_field.png>)
+
+![Wind simulation](<Project 2 Boat/simulator/gif/simulation_with_different_wind.gif>)

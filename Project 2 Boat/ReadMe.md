@@ -373,3 +373,9 @@ We can see that adaptive control can successfully adapt to the wind:
 
 ![Control by time](images/control_plot_steerable.png)
 
+## Control of boats inside Wind vector field
+
+**Wind Field:**  
+![Wind field](images/Find_field.png)
+
+![Wind simulation](simulator/gif/simulation_with_different_wind.gif)

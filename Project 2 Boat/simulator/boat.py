@@ -1,5 +1,6 @@
 import numpy as np
 from dataclasses import dataclass
+from wind_generator import WindField
 
 
 @dataclass
@@ -50,18 +51,18 @@ class BoatParameters:
 
 class Boat:
     """Base class for boat dynamics with thrusters."""
-    def __init__(self, init_state: BoatState, params: BoatParameters, wind_velocity: np.ndarray):
+    def __init__(self, init_state: BoatState, params: BoatParameters, wind_field: WindField):
         """
         Initializes the Boat object with initial conditions and system parameters.
         
         Args:
             init_state: Initial state of the boat
             params: Boat parameters
-            wind_velocity: Global frame wind velocity [Vx_wind, Vy_wind]
+            wind_field: Class to get wind vector field [Vx_wind, Vy_wind]
         """
-        self.state = init_state
-        self.params = params
-        self.wind_velocity = wind_velocity  # Wind in global frame [Vw_x, Vw_y]
+        self.state: BoatState = init_state
+        self.params: BoatParameters = params
+        self.wind_field: WindField = wind_field  # Wind in global frame [Vw_x, Vw_y]
 
     def dynamics(self, control: np.ndarray) -> np.ndarray:
         """
@@ -85,8 +86,10 @@ class Boat:
         dpsi = self.state.omega
 
         # Apply wind disturbance
-        dx += self.wind_velocity[0]
-        dy += self.wind_velocity[1]
+        if self.wind_field is not None:
+            wind = self.wind_field.get_wind([self.state.x, self.state.y])
+            dx += wind[0]
+            dy += wind[1]
 
         # Dynamics
         dVx = (Fx / self.params.mass) - self.params.damping[0] * self.state.Vx

@@ -1,14 +1,15 @@
 import numpy as np
 from boat import BoatState, BoatParameters, DifferentialThrustBoat, SteerableThrustBoat
 from controllers import DifferentialController, SteeringController
+from wind_generator import WindField
 from visualization import BoatVisualizer
 from tqdm import tqdm
 
 class Simulation:
-    def __init__(self, fin_time, dt, mode='realtime', wind_velocity = (0, 0), boat_types=None):
+    def __init__(self, fin_time, dt, mode='realtime', wind_field: WindField = None, boat_types=None):
         self.dt = dt
         self.time = np.arange(0, fin_time, dt)
-        self.wind_velocity = np.array(wind_velocity)
+        self.wind_field = wind_field
         self.boat_types = boat_types
         self.num_boats = len(boat_types)
         self.trajectories = [[] for _ in range(self.num_boats)]
@@ -27,10 +28,10 @@ class Simulation:
         for i, boat_type in enumerate(self.boat_types):
             state = init_states[i]
             if boat_type == 'differential':
-                self.boats.append(DifferentialThrustBoat(state, self.boat_parameters, self.wind_velocity))
+                self.boats.append(DifferentialThrustBoat(state, self.boat_parameters, self.wind_field))
                 self.controllers.append(DifferentialController(self.boat_parameters, self.control_limits['differential']))
             else:
-                self.boats.append(SteerableThrustBoat(state, self.boat_parameters, self.wind_velocity))
+                self.boats.append(SteerableThrustBoat(state, self.boat_parameters, self.wind_field))
                 self.controllers.append(SteeringController(self.boat_parameters, self.control_limits['steerable']))
 
         self.visualizer = BoatVisualizer(
@@ -38,14 +39,14 @@ class Simulation:
             desired_trajectories=desired_trajs,
             control_limits=self.control_limits,
             boat_types=self.boat_types,
-            wind_velocity=self.wind_velocity,
+            wind_field=self.wind_field,
         )
 
     def print_wind(self):
         for type, boat in zip(self.boat_types, self.boats):
             print(f"{boat.state.Wx:.3f}, {boat.state.Wy:.3f}, | {type}")
         print('-----')
-        print(self.wind_velocity)
+        # print(self.wind_field)
 
     def simulate(self):
         for frame, t in enumerate(tqdm(self.time)):
@@ -63,7 +64,7 @@ class Simulation:
                 self.visualizer.update(states, self.trajectories, t, controls, self.dt * self.update_vis_every_n_frame)
         print("finalize")
         self.visualizer.create_target_phase_plot(self.trajectories, self.visualizer.desired_trajs, save_path='target_phase_plot.png')
-        self.visualizer.create_estimated_wind_plot(self.trajectories, self.wind_velocity, save_path='wind_estimates_plot.png')
+        self.visualizer.create_estimated_wind_plot(self.trajectories, save_path='wind_estimates_plot.png')
         self.visualizer.create_control_plot(self.control_histories, self.boat_types, save_path='control_plot.png')
         self.visualizer.finalize()
 
@@ -98,9 +99,11 @@ def generate_random_boats(num_boats, seed=42, goal=(0, 0)):
 
 def main():
     T, dt = 300, 1
-    wind_velocity = (0.04, -0.03)
+
+    wind_field = WindField(0.10, scale=5, random_seed=25)
+    wind_field.plot_wind_field(x_range=(-10, 10), y_range=(-10, 10), grid_step=0.5, size_mult=250)
     boat_types, init_states, desired_states = generate_random_boats(20)
-    sim = Simulation(T, dt, 'final', wind_velocity, boat_types)
+    sim = Simulation(T, dt, 'gif', wind_field, boat_types)
     sim.initialize(init_states, desired_states)
     sim.simulate()
     sim.print_wind()
