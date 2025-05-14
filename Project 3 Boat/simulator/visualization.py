@@ -29,10 +29,10 @@ class BoatVisualizer:
 
         # Wind visualization parameters
         self.wind_dots = None
-        self.num_wind_dots = 500
+        self.num_wind_dots = 250
         self.wind_dot_positions = None
-        self.wind_dot_size = 20
-        self.wind_dot_alpha = 0.5
+        self.wind_dot_size = 50
+        self.wind_dot_alpha = 0.7
         self.plot_limits = None  # Will be set during first update
 
         self.ax.set_title('Multi-Boat Trajectory Tracking')
@@ -62,7 +62,7 @@ class BoatVisualizer:
         rotation = np.array([[np.cos(psi), -np.sin(psi)],
                              [np.sin(psi),  np.cos(psi)]])
         rotated_points = (rotation @ points).T + [x, y]
-        return Polygon(rotated_points, closed=True, color=color, alpha=0.5, zorder=3)
+        return Polygon(rotated_points, closed=True, color=color, alpha=0.7, zorder=3)
 
     def _initialize_wind_dots(self, x_lim, y_lim):
         """Initialize wind dots within the given plot limits"""
@@ -128,14 +128,16 @@ class BoatVisualizer:
         self.ax.set_ylim(y_lim)
 
         if self.wind_dots is None and self.wind_field is not None:
+            self.wind_field.plot_wind_field(x_range=x_lim, y_range=y_lim, ax=self.ax)
+            self.dummy_arrow = self.ax.quiver(0, 0, 1, 1, scale=1e9, color='lightblue')
             self._initialize_wind_dots(x_lim, y_lim)
 
         self._update_wind_dots(x_lim, y_lim, dt=dt)
 
         # Add boat type color legend
         if self.wind_dots is not None:
-            all_handles = self.boat_type_legend_handles + list([self.wind_dots])
-            all_labels = [h.get_label() for h in self.boat_type_legend_handles] + ['wind']
+            all_handles = self.boat_type_legend_handles + list([self.wind_dots]) + [self.dummy_arrow] 
+            all_labels = [h.get_label() for h in self.boat_type_legend_handles] + ['wind', 'Wind Field'] 
         else:
             all_handles = self.boat_type_legend_handles
             all_labels = [h.get_label() for h in self.boat_type_legend_handles] 

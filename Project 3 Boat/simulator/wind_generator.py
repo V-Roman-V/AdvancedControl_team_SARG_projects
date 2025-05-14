@@ -23,7 +23,7 @@ class IWindField(ABC):
         """
         pass
 
-    def plot_wind_field(self, x_range=(-50, 50), y_range=(-50, 50), grid_step=5, size_mult=1):
+    def plot_wind_field(self, x_range=(-50, 50), y_range=(-50, 50), grid_step=5, size_mult=1, ax=None):
         """
         Default plot method for wind field visualization.
         Can be overridden by specific wind generators to customize the plotting style.
@@ -33,7 +33,13 @@ class IWindField(ABC):
         - x_range: tuple of (min_x, max_x)
         - y_range: tuple of (min_y, max_y)
         - grid_step: spacing between vectors
+        - ax: axis to draws onto it, if provided; otherwise, creates a new figure and axes.
         """
+        new_axis = ax is None
+        # Prepare axes
+        if new_axis:
+            fig, ax = plt.subplots(figsize=(10, 10))
+
         # Create grid
         x = np.arange(x_range[0], x_range[1], grid_step)
         y = np.arange(y_range[0], y_range[1], grid_step)
@@ -48,16 +54,18 @@ class IWindField(ABC):
                 U[i,j] = wind[0] * size_mult
                 V[i,j] = wind[1] * size_mult
         
-        # Create figure
-        plt.figure(figsize=(10, 10))
-        plt.quiver(X, Y, U, V, scale=20, scale_units='inches', angles='xy', color='blue', width=0.002)
-        plt.title('Wind Vector Field')
-        plt.xlabel('X Coordinate')
-        plt.ylabel('Y Coordinate')
-        plt.grid(True)
-        plt.xlim(x_range)
-        plt.ylim(y_range)
-        plt.show()
+        # Plot quiver
+        alpha = 1 if new_axis else 0.5
+        ax.quiver(X, Y, U, V, scale=20, scale_units='inches', angles='xy', color='blue', width=0.002, alpha=alpha, label="Wind Field")
+        if new_axis:
+            ax.set_title('Wind Vector Field')
+            ax.set_xlabel('X Coordinate')
+            ax.set_ylabel('Y Coordinate')
+            ax.grid(True)
+            ax.set_xlim(x_range)
+            ax.set_ylim(y_range)
+            ax.legend()
+            plt.show()
 
 
 class PerlinWindField(IWindField):
@@ -111,8 +119,8 @@ class PerlinWindField(IWindField):
         
         return (wind_x, wind_y)
 
-    def plot_wind_field(self, x_range=(-10, 10), y_range=(-10, 10), grid_step=0.5, size_mult=250):
-        super().plot_wind_field(x_range=x_range, y_range=y_range, grid_step=grid_step, size_mult=size_mult)
+    def plot_wind_field(self, x_range=(-10, 10), y_range=(-10, 10), grid_step=0.5, size_mult=250, ax=None):
+        super().plot_wind_field(x_range=x_range, y_range=y_range, grid_step=grid_step, size_mult=size_mult, ax=ax)
 
 
 class CosineWaveWind(IWindField):
@@ -158,8 +166,9 @@ class CosineWaveWind(IWindField):
         wind_vector = current_speed * self.dir_vector
         return (wind_vector[0], wind_vector[1])
 
-    def plot_wind_field(self, x_range=(-10, 10), y_range=(-10, 10), grid_step=0.5, size_mult=50):
-        super().plot_wind_field(x_range=x_range, y_range=y_range, grid_step=grid_step, size_mult=size_mult)
+    def plot_wind_field(self, x_range=(-10, 10), y_range=(-10, 10), grid_step=1, size_mult=70, ax=None):
+        super().plot_wind_field(x_range=x_range, y_range=y_range, grid_step=grid_step, size_mult=size_mult, ax=ax)
+
 
 class ConstantWind(IWindField):
     def __init__(self, speed, direction):
@@ -169,8 +178,8 @@ class ConstantWind(IWindField):
     def get_wind(self, coords):
         return self.vector
 
-    def plot_wind_field(self, x_range=(-10, 10), y_range=(-10, 10), grid_step=1, size_mult=70):
-        super().plot_wind_field(x_range=x_range, y_range=y_range, grid_step=grid_step, size_mult=size_mult)
+    def plot_wind_field(self, x_range=(-10, 10), y_range=(-10, 10), grid_step=1, size_mult=70, ax=None):
+        super().plot_wind_field(x_range=x_range, y_range=y_range, grid_step=grid_step, size_mult=size_mult, ax=ax)
 
 
 class WindModelType(Enum):
@@ -224,6 +233,6 @@ if __name__ == '__main__':
     wind3 = WindModel.create('constant', speed=0.1, direction=-45)
     
     # Plot wind fields
-    wind1.plot_wind_field(x_range=(-10, 10), y_range=(-10, 10), grid_step=0.5, size_mult=50)
+    wind1.plot_wind_field(x_range=(-10, 10), y_range=(-10, 10), grid_step=1, size_mult=70)
     wind2.plot_wind_field(x_range=(-10, 10), y_range=(-10, 10), grid_step=0.5, size_mult=250)
     wind3.plot_wind_field(x_range=(-10, 10), y_range=(-10, 10), grid_step=1, size_mult=70)

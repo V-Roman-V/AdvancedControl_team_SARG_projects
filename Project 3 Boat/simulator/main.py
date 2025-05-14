@@ -107,7 +107,6 @@ def main():
     T, dt = 300, 1
 
     wind_field = wind_field_types['cosine']
-    wind_field.plot_wind_field(x_range=(-10, 10), y_range=(-10, 10))
     boat_types, init_states, desired_states = generate_random_boats(20)
     sim = Simulation(T, dt, 'gif', wind_field, boat_types)
     sim.initialize(init_states, desired_states)
