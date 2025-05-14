@@ -1,12 +1,12 @@
 import numpy as np
 from boat import BoatState, BoatParameters, DifferentialThrustBoat, SteerableThrustBoat
 from controllers import DifferentialController, SteeringController
-from wind_generator import WindField
+from wind_generator import IWindField, WindModel
 from visualization import BoatVisualizer
 from tqdm import tqdm
 
 class Simulation:
-    def __init__(self, fin_time, dt, mode='realtime', wind_field: WindField = None, boat_types=None):
+    def __init__(self, fin_time, dt, mode='realtime', wind_field: IWindField = None, boat_types=None):
         self.dt = dt
         self.time = np.arange(0, fin_time, dt)
         self.wind_field = wind_field
@@ -97,11 +97,17 @@ def generate_random_boats(num_boats, seed=42, goal=(0, 0)):
 
     return boat_types, init_states, desired_states
 
+wind_field_types = {
+    "cosine": WindModel.create('cosine', base_speed=0.08, direction=45, wavelength=0.07, amplitude=0.6),
+    "perlin": WindModel.create('perlin', max_speed=0.1, scale=5, random_seed=42),
+    "constant": WindModel.create('constant', speed=0.1, direction=-45)
+}
+
 def main():
     T, dt = 300, 1
 
-    wind_field = WindField(0.10, scale=5, random_seed=25)
-    wind_field.plot_wind_field(x_range=(-10, 10), y_range=(-10, 10), grid_step=0.5, size_mult=250)
+    wind_field = wind_field_types['cosine']
+    wind_field.plot_wind_field(x_range=(-10, 10), y_range=(-10, 10))
     boat_types, init_states, desired_states = generate_random_boats(20)
     sim = Simulation(T, dt, 'gif', wind_field, boat_types)
     sim.initialize(init_states, desired_states)

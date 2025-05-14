@@ -5,12 +5,12 @@ import imageio
 from matplotlib.cm import ScalarMappable
 from matplotlib.colors import Normalize
 from matplotlib.lines import Line2D
-from wind_generator import WindField
+from wind_generator import IWindField
 
 class BoatVisualizer:
-    def __init__(self, mode='realtime', desired_trajectories=None, control_limits=None, boat_types=None, wind_field: WindField = None):
+    def __init__(self, mode='realtime', desired_trajectories=None, control_limits=None, boat_types=None, wind_field: IWindField = None):
         self.mode = mode
-        self.wind_field : WindField = wind_field
+        self.wind_field : IWindField = wind_field
         self.fig, self.ax = plt.subplots(figsize=(10, 8))
         self.boat_patches = []
         self.trajectory_lines = []
@@ -29,7 +29,7 @@ class BoatVisualizer:
 
         # Wind visualization parameters
         self.wind_dots = None
-        self.num_wind_dots = 200
+        self.num_wind_dots = 500
         self.wind_dot_positions = None
         self.wind_dot_size = 20
         self.wind_dot_alpha = 0.5

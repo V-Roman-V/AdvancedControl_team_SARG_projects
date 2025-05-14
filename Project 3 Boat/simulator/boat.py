@@ -1,6 +1,6 @@
 import numpy as np
 from dataclasses import dataclass
-from wind_generator import WindField
+from wind_generator import IWindField
 
 
 @dataclass
@@ -51,7 +51,7 @@ class BoatParameters:
 
 class Boat:
     """Base class for boat dynamics with thrusters."""
-    def __init__(self, init_state: BoatState, params: BoatParameters, wind_field: WindField):
+    def __init__(self, init_state: BoatState, params: BoatParameters, wind_field: IWindField):
         """
         Initializes the Boat object with initial conditions and system parameters.
         
@@ -62,7 +62,7 @@ class Boat:
         """
         self.state: BoatState = init_state
         self.params: BoatParameters = params
-        self.wind_field: WindField = wind_field  # Wind in global frame [Vw_x, Vw_y]
+        self.wind_field: IWindField = wind_field  # Wind in global frame [Vw_x, Vw_y]
 
     def dynamics(self, control: np.ndarray) -> np.ndarray:
         """
