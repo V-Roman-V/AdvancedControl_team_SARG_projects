@@ -100,16 +100,13 @@ The wind now exerts a **directional force** on the boat's sail, proportional to:
   \end{aligned}
   $$
 
-- **Effective wind angle**:
+- **Speed difference with wind**:
 
   $$
-  \alpha = \text{atan2}(V_{wy}^b, V_{wx}^b).
-  $$
-
-- **Speed difference**:
-
-  $$
-  \Delta V = \sqrt{(V_{wx}^b - V_x)^2 + (V_{wy}^b - V_y)^2}.
+  \begin{aligned}
+   \Delta V_{x}^b &= V_x - V_{wx}^b, \\
+   \Delta V_{y}^b &= V_y - V_{wy}^b.
+  \end{aligned}
   $$
 
 #### Sail Force Calculation:
@@ -117,8 +114,8 @@ The total wind force in the boat's body frame is:
 
 $$
 \begin{aligned}
-F_{sail,x} &= \frac{1}{2} \rho C_x A \cdot \Delta V^2 \cos \alpha, \\
-F_{sail,y} &= \frac{1}{2} \rho C_y A \cdot \Delta V^2 \sin \alpha,
+F_{sail,x} &= \frac{1}{2} \rho C_x A \cdot \Delta V_{x}^b, \\
+F_{sail,y} &= \frac{1}{2} \rho C_y A \cdot \Delta V_{y}^b,
 \end{aligned}
 $$
 
@@ -127,6 +124,9 @@ where:
 - $C_y$ = Drag coefficient for **sway** (lateral force),  
 - $\rho$ = Air density,  
 - $A$ = Effective sail area.  
+
+Boats dragged by the wind:  
+![alt text](simulator/gif/boats_dragged_by_the_wind.gif)
 
 ### Dynamics with Wind Disturbance  
 

@@ -18,7 +18,16 @@ class Simulation:
         self.controllers = []
         self.visualizer = None
         self.control_limits = {'differential': 20, 'steerable': [40, np.pi/2]}
-        self.boat_parameters = BoatParameters(mass=500, inertia=200, damping=[0.5, 0.5, 0.1], L=1)
+        self.boat_parameters = BoatParameters(
+            mass=500, 
+            inertia=200, 
+            damping=[0.5, 0.5, 0.1], # [Dx, Dy, Dpsi] damping coefficients
+            L=1,                     # Distance from CoM to thruster
+            air_density=1.225,       # kg/m³ (standard air)
+            sail_Cx=25,             # Surge drag coefficient  
+            sail_Cy=1,             # Sway drag coefficient
+            sail_area=10,           # m² (example sail area)
+        )
         self.mode=mode
         self.frame_numbers = 80
         self.update_vis_every_n_frame = len(self.time) // self.frame_numbers 

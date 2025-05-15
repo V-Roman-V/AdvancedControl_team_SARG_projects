@@ -47,6 +47,10 @@ class BoatParameters:
     inertia: float
     damping: list  # [Dx, Dy, Dpsi] damping coefficients
     L: float  # Distance from CoM to thruster
+    air_density: float # kg/m³ (standard air)
+    sail_Cx: float # Surge drag coefficient  
+    sail_Cy: float # Sway drag coefficient
+    sail_area: float # m² (example sail area)
 
 
 class Boat:
@@ -75,7 +79,8 @@ class Boat:
 
     def _kinematics(self, Fx: float, Fy: float, M: float) -> np.ndarray:
         """
-        Computes the kinematics of the vessel based on forces and moments.
+        Computes the kinematics of the vessel based on forces and moments,
+        including wind sail dynamics.
 
         Returns:
             np.ndarray: Derivative of the vessel's state [dx, dy, dpsi, dVx, dVy, domega].
@@ -85,15 +90,30 @@ class Boat:
         dy = self.state.Vx * np.sin(self.state.psi) + self.state.Vy * np.cos(self.state.psi)
         dpsi = self.state.omega
 
-        # Apply wind disturbance
-        if self.wind_field is not None:
-            wind = self.wind_field.get_wind([self.state.x, self.state.y])
-            dx += wind[0]
-            dy += wind[1]
+        # Initialize sail forces
+        F_sail_x, F_sail_y = 0.0, 0.0
 
-        # Dynamics
-        dVx = (Fx / self.params.mass) - self.params.damping[0] * self.state.Vx
-        dVy = (Fy / self.params.mass) - self.params.damping[1] * self.state.Vy
+        # Calculate wind effects if wind field exists
+        if self.wind_field is not None:
+            # Get global wind velocity
+            V_wx_global, V_wy_global = self.wind_field.get_wind([self.state.x, self.state.y])
+            
+            # Transform to boat's body frame
+            V_wx_body = np.cos(self.state.psi) * V_wx_global + np.sin(self.state.psi) * V_wy_global
+            V_wy_body = -np.sin(self.state.psi) * V_wx_global + np.cos(self.state.psi) * V_wy_global
+            
+            # Calculate apparent wind angle and speed difference
+            V_aw_x = V_wx_body - self.state.Vx
+            V_aw_y = V_wy_body - self.state.Vy
+            
+            # Calculate sail forces (using boat parameters)
+            Wind_Force = 0.5 * self.params.air_density * self.params.sail_area
+            F_sail_x = Wind_Force * self.params.sail_Cx * V_aw_x
+            F_sail_y = Wind_Force * self.params.sail_Cy * V_aw_y
+
+        # Dynamics with sail forces
+        dVx = ((Fx + F_sail_x) / self.params.mass) - self.params.damping[0] * self.state.Vx
+        dVy = ((Fy + F_sail_y) / self.params.mass) - self.params.damping[1] * self.state.Vy
         domega = (M / self.params.inertia) - self.params.damping[2] * self.state.omega
         return np.array([dx, dy, dpsi, dVx, dVy, domega])
 
