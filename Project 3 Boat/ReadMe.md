@@ -285,7 +285,7 @@ Define tracking errors:
 $$
 \begin{aligned}
 \bar{e_x} &= V_x - V_x^{des} = V_x - k_1 e_f \\
-\bar{e_\omega} &= \omega + k_2 e_\psi
+\bar{e_\omega} &= \omega - \omega^{\text{des}} = \omega + k_2 e_\psi
 \end{aligned}
 $$
 
