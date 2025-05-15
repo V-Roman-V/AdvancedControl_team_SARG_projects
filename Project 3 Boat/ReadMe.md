@@ -167,11 +167,13 @@ F_x(u) \\
 F_y(u) \\
 M(u)
 \end{bmatrix} + 
+\underbrace{
 \begin{bmatrix}
 F_x^{sail} \\
 F_y^{sail} \\
 0 
 \end{bmatrix}
+}_{\text{Sail contribution}}
 \right)
 $$
 
