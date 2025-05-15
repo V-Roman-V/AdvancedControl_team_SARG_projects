@@ -410,6 +410,99 @@ This gives a unique solution as long as $L \neq 0$ and thrust is always forward 
 | Thruster Mapping (diff)  | $u_1 = \frac{1}{2}(F_x + M/L)$, $u_2 = \frac{1}{2}(F_x - M/L)$             |
 | Thruster Mapping (steer) | $u_\phi = \text{atan2}(M / L, F_x)$, $u_f = \sqrt{F_x^2 + \left(\frac{M}{L}\right)^2}$ |
 
+## Control Gain Selection via Linearized Stability Analysis
+
+To choose optimal gains for the adaptive backstepping controller, we analyze the closed-loop dynamics around the equilibrium point using linearization. The goal is to derive conditions under which the system is asymptotically stable, with eigenvalues that are:
+
+* Real
+* Negative
+* Equal (for fastest non-oscillatory convergence)
+
+### Step 1: Define Linearized Error Dynamics
+
+Let the system state error vector be:
+
+$$
+\mathbf{e} = \begin{bmatrix} e_f \\ \bar{e}_x \\ e_\psi \\ \bar{e}_\omega \end{bmatrix}
+$$
+
+From the adaptive backstepping design, the closed-loop linearized dynamics (assuming constant estimates) are:
+
+$$
+\begin{aligned}
+\dot{e}_f &= -\bar{e}_x \\
+\dot{\bar{e}}_x &= -k_1 e_f - k_3 \bar{e}_x \\
+\dot{e}_\psi &= -\bar{e}_\omega \\
+\dot{\bar{e}}_\omega &= -k_2 e_\psi - k_4 \bar{e}_\omega
+\end{aligned}
+$$
+
+We can express this in state-space form:
+
+$$
+\dot{\mathbf{e}} = A \mathbf{e}, \quad \text{where}
+$$
+
+$$
+A = \begin{bmatrix}
+0 & -1 & 0 & 0 \\
+-k_1 & -k_3 & 0 & 0 \\
+0 & 0 & 0 & -1 \\
+0 & 0 & -k_2 & -k_4
+\end{bmatrix}
+$$
+
+This matrix is block diagonal, so the eigenvalues split into two subsystems:
+
+* Translational subsystem ($e_f, \bar{e}_x$)
+* Rotational subsystem ($e_\psi, \bar{e}_\omega$)
+
+### Step 2: Compute Eigenvalues Symbolically
+
+Each 2x2 block has the form:
+
+$$
+\begin{bmatrix} 0 & -1 \\ -k_i & -k_j \end{bmatrix}
+$$
+
+The characteristic polynomial is:
+
+$$
+\lambda^2 + k_j \lambda + k_i = 0
+$$
+
+So the eigenvalues are:
+
+$$
+\lambda = \frac{-k_j \pm \sqrt{k_j^2 - 4k_i}}{2}
+$$
+
+### Step 3: Make Eigenvalues Real, Equal, Negative
+
+To ensure real and equal eigenvalues:
+
+* Discriminant = 0: $k_j^2 = 4k_i$
+* Eigenvalue: $\lambda = -\frac{k_j}{2} < 0$
+
+So choose:
+
+$$
+\boxed{k_i = \frac{k_j^2}{4}} \quad \text{with } k_j > 0
+$$
+
+### Step 4: Apply to Our System
+
+Let:
+
+* Translational: $k_1 = \frac{k_3^2}{4}$
+* Rotational: $k_2 = \frac{k_4^2}{4}$
+
+This ensures both subsystems have identical, negative, real eigenvalues:
+
+$$
+\lambda = -\frac{k_3}{2}, \quad \lambda = -\frac{k_4}{2}
+$$
+
 ---
 
 ### Old energy-based control with wind:

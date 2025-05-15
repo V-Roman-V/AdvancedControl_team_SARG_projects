@@ -26,6 +26,10 @@ class BoatState:
         """Converts the boat state to a numpy array."""
         return np.array([self.x, self.y, self.psi, self.Vx, self.Vy, self.omega, self.adapt_param1, self.adapt_param2])
 
+    def _wrap_angle(self, angle):
+        """Wraps angle to [-pi, +pi] using atan2-style wrapping."""
+        return (angle + np.pi) % (2 * np.pi) - np.pi
+
     def update(self, derivatives: np.ndarray, dt: float) -> None:
         """Updates the boat state using Euler integration."""
         if len(derivatives) != 8:
@@ -33,6 +37,7 @@ class BoatState:
         self.x += derivatives[0] * dt
         self.y += derivatives[1] * dt
         self.psi += derivatives[2] * dt
+        self.psi = self._wrap_angle(self.psi)
         self.Vx += derivatives[3] * dt
         self.Vy += derivatives[4] * dt
         self.omega += derivatives[5] * dt
