@@ -21,12 +21,12 @@ To test the control system under varying environmental conditions, we implemente
    A spatially varying wind defined by sinusoidal functions, simulating periodic gusts.
 
    $$
-   V(x,y) = A \left(1 + B\cos\left(\frac{2\pi \text{ dist}}{\lambda}\right)\right)
+   V(x,y) = A \left(1 + B \cos \left( \frac{2\pi d}{\lambda} \right) \right)
    $$  
 
    where:
      - $A$, $B$ are `base_speed` and wave `amplitude`
-     - $\text{dist}$ is a `distance` aling wind direction
+     - $d$ is a `distance` aling wind direction
      - $\lambda$ is a `wavelength`.  
 
 2. **Perlin Noise Wind Field**:  
@@ -89,21 +89,21 @@ The wind now exerts a **directional force** on the boat's sail, proportional to:
 #### Wind Dynamic:
 - **Relative wind velocity** (in boat's body frame):
 
-  $$
-  \begin{aligned}
-  V_{wx}^b &= \cos(\psi) V_{wx} + \sin(\psi) V_{wy}, \\
-  V_{wy}^b &= -\sin(\psi) V_{wx} + \cos(\psi) V_{wy}.
-  \end{aligned}
-  $$
+$$
+\begin{aligned}
+V_{wx}^b &= \cos(\psi) V_{wx} + \sin(\psi) V_{wy}, \\
+V_{wy}^b &= -\sin(\psi) V_{wx} + \cos(\psi) V_{wy}.
+\end{aligned}
+$$
 
 - **Speed difference with wind**:
 
-  $$
-  \begin{aligned}
-   \Delta V_{x}^b &= V_{wx}^b - V_x, \\
-   \Delta V_{y}^b &= V_{wy}^b - V_y.
-  \end{aligned}
-  $$
+$$
+\begin{aligned}
+  \Delta V_{x}^b &= V_{wx}^b - V_x, \\
+  \Delta V_{y}^b &= V_{wy}^b - V_y.
+\end{aligned}
+$$
 
 #### Sail Force Calculation:
 The total wind force in the boat's body frame is:
@@ -166,15 +166,12 @@ $$
 F_x(u) \\
 F_y(u) \\
 M(u)
-\end{bmatrix}
-+ 
-\underbrace{
+\end{bmatrix} + 
 \begin{bmatrix}
 F_{sail,x} \\
 F_{sail,y} \\
 0
 \end{bmatrix}
-}_{\text{Sail contribution}}
 \right)
 $$
 
@@ -261,7 +258,7 @@ $$
 Time derivative:
 
 $$
-\dot{L}_1 = e_f \dot{e}_f + e_\psi \dot{e}_\psi
+\dot{L_1} = e_f \dot{e_f} + e_\psi \dot{e_\psi}
 $$
 
 Assume:
@@ -271,7 +268,7 @@ Assume:
 Then:
 
 $$
-\dot{L}_1 = -e_f V_x + e_\psi \omega
+\dot{L_1} = -e_f V_x + e_\psi \omega
 $$
 
 Define desired virtual controls:
@@ -287,8 +284,8 @@ Define tracking errors:
 
 $$
 \begin{aligned}
-\bar{e}_x &= V_x - V_x^{\text{des}} = V_x - k_1 e_f \\
-\bar{e}_\omega &= \omega + k_2 e_\psi
+\bar{e_x} &= V_x - V_x^{des} = V_x - k_1 e_f \\
+\bar{e_\omega} &= \omega + k_2 e_\psi
 \end{aligned}
 $$
 
@@ -297,15 +294,15 @@ $$
 Augment the Lyapunov function:
 
 $$
-L_2 = L_1 + \frac{1}{2}(\bar{e}_x^2 + \bar{e}_\omega^2)
+L_2 = L_1 + \frac{1}{2}(\bar{e_x^2} + \bar{e_\omega^2})
 $$
 
 Compute its derivative:
 
 $$
 \begin{aligned}
-\dot{L}_2 &= -e_f \bar{e}_x + e_\psi (-\bar{e}_\omega + k_2 e_\psi) + \bar{e}_x \dot{V}_x + \bar{e}_\omega \dot{\omega} \\
-&= -k_1 e_f^2 - k_2 e_\psi^2 + \bar{e}_x \dot{V}_x + \bar{e}_\omega \dot{\omega}
+\dot{L}_2 &= -e_f \bar{e_x} + e_\psi (-\bar{e_\omega} + k_2 e_\psi) + \bar{e_x} \dot{V_x} + \bar{e_\omega} \dot{\omega} \\
+&= -k_1 e_f^2 - k_2 e_\psi^2 + \bar{e_x} \dot{V_x} + \bar{e_\omega} \dot{\omega}
 \end{aligned}
 $$
 
@@ -313,7 +310,7 @@ Use the system dynamics:
 
 $$
 \begin{aligned}
-\dot{V}_x &= \frac{1}{m} F_x + \Delta_x \\
+\dot{V_x} &= \frac{1}{m} F_x + \Delta_x \\
 \dot{\omega} &= \frac{1}{I_z} M + \Delta_\psi
 \end{aligned}
 $$
@@ -323,15 +320,15 @@ $$
 We model $\Delta_x, \Delta_\psi$ as linearly parameterized unknowns:
 
 $$
-\Delta_x = \hat{\theta}_x^T \phi_x, \quad \Delta_\psi = \hat{\theta}_\psi^T \phi_\psi
+\Delta_x = \hat{\theta_x^T} \phi_x, \quad \Delta_\psi = \hat{\theta_\psi^T} \phi_\psi
 $$
 
 Control laws:
 
 $$
 \begin{aligned}
-F_x &= -m k_3 \bar{e}_x + m \hat{\theta}_x^T \phi_x \\
-M   &= -I_z k_4 \bar{e}_\omega + I_z \hat{\theta}_\psi^T \phi_\psi
+F_x &= -m k_3 \bar{e_x} + m \hat{\theta_x^T} \phi_x \\
+M   &= -I_z k_4 \bar{e_\omega} + I_z \hat{\theta_\psi^T} \phi_\psi
 \end{aligned}
 $$
 
@@ -339,15 +336,15 @@ Adaptation laws:
 
 $$
 \begin{aligned}
-\dot{\hat{\theta}}_x &= \Gamma_x \phi_x \bar{e}_x \\
-\dot{\hat{\theta}}_\psi &= \Gamma_\psi \phi_\psi \bar{e}_\omega
+\dot{\hat{\theta_x}} &= \Gamma_x \phi_x \bar{e_x} \\
+\dot{\hat{\theta_\psi}} &= \Gamma_\psi \phi_\psi \bar{e_\omega}
 \end{aligned}
 $$
 
 Then:
 
 $$
-\dot{L}_2 = -k_1 e_f^2 - k_2 e_\psi^2 - k_3 \bar{e}_x^2 - k_4 \bar{e}_\omega^2 \le 0
+\dot{L_2} = -k_1 e_f^2 - k_2 e_\psi^2 - k_3 \bar{e_x^2} - k_4 \bar{e_\omega^2} \le 0
 $$
 
 ### Differential Drive Controller
@@ -402,7 +399,7 @@ This gives a unique solution as long as $L \neq 0$ and thrust is always forward 
 | Velocity errors          | $\bar{e}_x = V_x - k_1 e_f$, $\bar{e}_\omega = \omega + k_2 e_\psi$        |
 | Force command            | $F_x = -m k_3 \bar{e}_x + m \hat{\theta}_x^T \phi_x$                       |
 | Moment command           | $M = -I_z k_4 \bar{e}_\omega + I_z \hat{\theta}_\psi^T \phi_\psi$          |
-| Adaptive update laws     | $\dot{\hat{\theta}}_x = \Gamma_x \phi_x \bar{e}_x$, $\dot{\hat{\theta}}_\psi = \Gamma_\psi \phi_\psi \bar{e}_\omega$ |
+| Adaptive update laws     | $\dot{\hat{\theta_x}} = \Gamma_x \phi_x \bar{e_x}$, $\dot{\hat{\theta_\psi}} = \Gamma_\psi \phi_\psi \bar{e_\omega}$ |
 | Thruster Mapping (diff)  | $u_1 = \frac{1}{2}(F_x + M/L)$, $u_2 = \frac{1}{2}(F_x - M/L)$             |
 | Thruster Mapping (steer) | $u_\phi = \text{atan2}(M / L, F_x)$, $u_f = \sqrt{F_x^2 + \left(\frac{M}{L}\right)^2}$ |
 
@@ -419,17 +416,17 @@ To choose optimal gains for the adaptive backstepping controller, we analyze the
 Let the system state error vector be:
 
 $$
-\mathbf{e} = \begin{bmatrix} e_f \\ \bar{e}_x \\ e_\psi \\ \bar{e}_\omega \end{bmatrix}
+\mathbf{e} = \begin{bmatrix} e_f \\ \bar{e_x} \\ e_\psi \\ \bar{e_\omega} \end{bmatrix}
 $$
 
 From the adaptive backstepping design, the closed-loop linearized dynamics (assuming constant estimates) are:
 
 $$
 \begin{aligned}
-\dot{e}_f &= -\bar{e}_x \\
-\dot{\bar{e}}_x &= -k_1 e_f - k_3 \bar{e}_x \\
-\dot{e}_\psi &= -\bar{e}_\omega \\
-\dot{\bar{e}}_\omega &= -k_2 e_\psi - k_4 \bar{e}_\omega
+\dot{e_f} &= -\bar{e_x} \\
+\dot{\bar{e_x}} &= -k_1 e_f - k_3 \bar{e_x} \\
+\dot{e_\psi} &= -\bar{e_\omega} \\
+\dot{\bar{e_\omega}} &= -k_2 e_\psi - k_4 \bar{e_\omega}
 \end{aligned}
 $$
 
