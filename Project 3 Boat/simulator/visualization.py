@@ -273,14 +273,14 @@ class BoatVisualizer:
         time = np.arange(num_steps)  # Using step indices as time
         
         # Plot estimates for each boat
-        for i in [1]:
+        for i in range(len(trajectories)):
             boat_traj = trajectories[i]
             # Extract wind estimates from boat states
             wx_estimates = [state[6] for state in boat_traj]
             wy_estimates = [state[7] for state in boat_traj]
             
-            true_x_wind = [self.wind_field.get_wind([s[0], s[1]])[0] for s in boat_traj]
-            true_y_wind = [self.wind_field.get_wind([s[0], s[1]])[1] for s in boat_traj]
+            # true_x_wind = [self.wind_field.get_wind([s[0], s[1]])[0] for s in boat_traj]
+            # true_y_wind = [self.wind_field.get_wind([s[0], s[1]])[1] for s in boat_traj]
 
             color = self.colors[i % len(self.colors)]
             label = f'Boat {i+1} ({self.boat_types[i]})'
@@ -288,18 +288,18 @@ class BoatVisualizer:
             ax1.plot(time, wx_estimates, color=color, label=label)
             ax2.plot(time, wy_estimates, color=color, label=label)
 
-            ax1.plot(time, true_x_wind, color='black', linestyle='--', linewidth=2, label='True Wind X')
-            ax2.plot(time, true_y_wind, color='black', linestyle='--', linewidth=2, label='True Wind Y')
+            # ax1.plot(time, true_x_wind, color='black', linestyle='--', linewidth=2, label='True Wind X')
+            # ax2.plot(time, true_y_wind, color='black', linestyle='--', linewidth=2, label='True Wind Y')
 
         # Configure plots
-        ax1.set_title('Wind X Component Estimates')
-        ax1.set_ylabel('Velocity (m/s)')
+        ax1.set_title('Adaptation param 1')
+        ax1.set_ylabel('Value')
         ax1.grid(True)
         ax1.legend(loc='upper right')
         
-        ax2.set_title('Wind Y Component Estimates')
+        ax2.set_title('Adaptation param 2')
         ax2.set_xlabel('Time Step')
-        ax2.set_ylabel('Velocity (m/s)')
+        ax2.set_ylabel('value')
         ax2.grid(True)
         ax2.legend(loc='upper right')
         

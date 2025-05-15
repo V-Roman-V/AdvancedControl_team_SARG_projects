@@ -11,11 +11,7 @@ This project is focused on the **control** of a motorized boat using adaptive-ba
 Given the initial state $\mathbf{x}_i$ and a desired position $\mathbf{x}_d$, the goal is to design a control law $\mathbf{u} = [u_1, u_2]^T$ such that the boat will reach the desired position with zero velocity, despite wind disturbances.
 The boat can finish at any angle. The thruster force can only be applied in the forward direction.
 
----
-
-**TODO:** add gif of the solution
-
----
+![alt text](simulator/gif/Final_sceene.gif)
 
 ## Updated Wind Fields
 
@@ -503,98 +499,6 @@ $$
 \lambda = -\frac{k_3}{2}, \quad \lambda = -\frac{k_4}{2}
 $$
 
----
-
-### Old energy-based control with wind:
-
-As we can see the energy-based control that assumes zero wind cannot provide good control to reach zero position.
-
-![alt text](<simulator/gif/simulation_energy_based.gif>)
-
-### Phase plot
-
-![Phase plot for energy based control with wind](images/energy_based_phase_plot.png)
-
-### Adaptive Control
-
-To handle unknown wind disturbances $(V_{wx}, V_{wy})$, we augment the energy-based controller with an adaptation law that adapts and compensates for the wind effects during the work.
-
-#### **1. State Augmentation**
-
-Define the **augmented state vector** to include wind disturbance adaptation:
-
-$$
-\mathbf{x_a} = \begin{bmatrix} x, y, \psi, V_x, V_y, \omega, \hat{V_{wx}}, \hat{V_{wy}} \end{bmatrix}^T,
-$$
-
-where $\hat{V_{wx}}, \hat{V_{wy}}$ are adaptation parameters of the wind velocities in global frame.
-
-The **main challenges** was to handle the different coordinates systems, as wind given in global coordinates, but boat velocities in local boat frame.
-
-#### **2. Modified Lyapunov Function**  
-
-Introduce a Lyapunov function including adaptation errors:
-
-$$
-E_a = E + \frac{1}{2 \gamma_w} \tilde{V_{wx}}^2 + \frac{1}{2 \gamma_w} \tilde{V_{wy}}^2,
-$$
-
-where:
-
-- $\gamma_x, \gamma_y > 0$ are adaptation gains.
-- $\tilde{V_{wx}} = V_{wx} - \hat{V_{wx}}$ and $\tilde{V_{wy}} = V_{wy} - \hat{V_{wy}}$ are adaptation errors.
-
-#### **3. Adaptation Laws**
-
-Derive adaptation laws by ensuring $\dot{E}_a \leq 0$:
-
-$$
-\begin{aligned}
-\dot{\hat{V_{wx}}} &= - \gamma_w \left( \hat{V_{wx}} + V_{xGlobal} \right), \\
-\dot{\hat{V_{wy}}} &= - \gamma_w \left( \hat{V_{wy}} + V_{yGlobal} \right).
-\end{aligned}
-$$
-
-where:
-- $V_{xGlobal}$ and $V_{yGlobal}$ are boat speed in global coordinates:
-
-$$
-\begin{aligned}
-V_{xGlobal} &= \cos(\psi) V_x - \sin(\psi) V_y, \\
-V_{yGlobal} &= \sin(\psi) V_x + \cos(\psi) V_y.
-\end{aligned}
-$$
-
-#### **4. Adaptive Control Laws**
-
-**Differential Drive:**
-
-$$
-\begin{aligned}
-u_1 &= k_0 x_e - k_1 \left( x_e (V_x - \hat{V_{wxLocal}}) + y_e (V_y - \hat{V_{wyLocal}}) - \omega \right) - k_2 \psi_e - k_w \hat{V_{wxLocal}}, \\
-u_2 &= k_0 x_e - k_1 \left( x_e (V_x - \hat{V_{wxLocal}}) + y_e (V_y - \hat{V_{wyLocal}}) + \omega \right) + k_2 \psi_e - k_w \hat{V_{wxLocal}}.
-\end{aligned}
-$$
-
-**Steerable Drive:**
-
-$$
-\begin{aligned}
-u_f &= k_0 (x_e^2 + y_e^2) - k_1 \left( x_e (V_x - \hat{V_{wxLocal}}) + y_e (V_y - \hat{V_{wyLocal}}) \right) - k_w \hat{V_{wxLocal}}, \\
-u_\phi &= k_2 \psi_e.
-\end{aligned}
-$$
-
-**where:**
-- $\hat{V_{wxLocal}}$ and $\hat{V_{wyLocal}}$ are adaptation parameters for wind velocities in the boat frame:
-
-$$
-\begin{aligned}
-\hat{V_{wxLocal}} &=  \cos(\psi) \dot{\hat{V_{wx}}} + \sin(\psi) \dot{\hat{V_{wy}}}, \\
-\hat{V_{wyLocal}} &= -\sin(\psi) \dot{\hat{V_{wx}}} + \cos(\psi) \dot{\hat{V_{wy}}}.
-\end{aligned}
-$$
-
 ## Repository Structure
 
 ### `control.py`
@@ -638,30 +542,32 @@ $$
 
 - **The desired reference trajectory** for each boat is defined by a target position $x_d, y_d$ for convinients every target position were set to origin of the coordinate system.
 
-- **Simulation duration**: The simulation runs for a total time of $T = 300$ seconds, with a time step $\Delta t = 1$ second.
+- **Simulation duration**: The simulation runs for a total time of $T = 80$ seconds, with a time step $\Delta t = 0.2$ second.
 
 ## Results
 
-## Adaptive control
+## Adaptive Backstepping Controller results
 
-### First iteration of adding wind adaptation
-
-![alt text](simulator/gif/simulation_funny_jumps.gif)
-![alt text](simulator/gif/simulation_water_slide.gif)
-
-### Successfull implementation
-
-We can see that adaptive control can successfully adapt to the wind:
-
-![trajectories](simulator/gif/simulation_adaptive_control.gif)
+![alt text](simulator/gif/constant_wind.gif)
+![alt text](simulator/gif/cosine_wind.gif)
+![alt text](simulator/gif/perlin_wind.gif)
 
 ### Phase plot
 
-![Phase plot](images/phase_plot_adaptive_control.png)
+constant phase plot:  
+![alt text](images/constant_phase_plot.png)
+
+cosine phase plot:  
+![Phase plot](images/Cosine_phase_plot.png)
+
+
+perlin phase plot:  
+![Phase plot](images/perlin_phase_plot.png)
+
 
 ### Wind Adaptation
 
-![Wind adaptation](images/wind_estimates.png)
+![alt text](images/adaptation_parameters.png)
 
 ### Control by time
 
@@ -672,10 +578,3 @@ We can see that adaptive control can successfully adapt to the wind:
 #### Control for steerable boats
 
 ![Control by time](images/control_plot_steerable.png)
-
-## Control of boats inside Wind vector field
-
-**Wind Field:**  
-![Wind field](images/Find_field.png)
-
-![Wind simulation](simulator/gif/simulation_with_different_wind.gif)

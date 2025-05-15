@@ -67,7 +67,7 @@ class Simulation:
                 self.visualizer.update(states, self.trajectories, t, controls, self.dt * self.update_vis_every_n_frame)
         print("finalize")
         self.visualizer.create_target_phase_plot(self.trajectories, self.visualizer.desired_trajs, save_path='target_phase_plot.png')
-        # self.visualizer.create_estimated_wind_plot(self.trajectories, save_path='wind_estimates_plot.png')
+        self.visualizer.create_estimated_wind_plot(self.trajectories, save_path='wind_estimates_plot.png')
         self.visualizer.create_control_plot(self.control_histories, self.boat_types, save_path='control_plot.png')
         self.visualizer.finalize()
 
@@ -107,9 +107,9 @@ wind_field_types = {
 }
 
 def main():
-    T, dt = 125, 0.2
+    T, dt = 80, 0.2
 
-    wind_field = wind_field_types['cosine']
+    wind_field = wind_field_types['constant']
     boat_types, init_states, desired_states = generate_random_boats(20)
     sim = Simulation(T, dt, 'gif', wind_field, boat_types)
     sim.initialize(init_states, desired_states)
