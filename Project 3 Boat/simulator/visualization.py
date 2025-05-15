@@ -58,11 +58,28 @@ class BoatVisualizer:
             plt.show()
 
     def _create_boat_triangle(self, x, y, psi, size=0.3, color='blue'):
+        # Create boat hull (triangle)
         points = np.array([[-size, -size], [size*2, 0], [-size, size]]).T
         rotation = np.array([[np.cos(psi), -np.sin(psi)],
                              [np.sin(psi),  np.cos(psi)]])
         rotated_points = (rotation @ points).T + [x, y]
-        return Polygon(rotated_points, closed=True, color=color, alpha=0.7, zorder=3)
+        boat_hull = Polygon(rotated_points, closed=True, color=color, alpha=0.7, zorder=3)
+        
+        # Create sail (rectangle) - rotated 90° relative to boat
+        sail_width = size * 1.6  # Thinner sail
+        sail_height = size * 0.3   # Shorter sail
+        sail_points = np.array([
+            [size*0.5, -sail_width],  # Bottom middle
+            [size*0.5, sail_width],   # Top middle
+            [size*0.5 - sail_height, sail_width],   # Top front
+            [size*0.5 - sail_height, -sail_width]   # Bottom front
+        ]).T
+
+        rotated_sail = (rotation @ sail_points).T + [x, y]
+        
+        sail = Polygon(rotated_sail, closed=True, facecolor='lightgray', edgecolor='black', alpha=0.9, linewidth=0.3, zorder=4,linestyle='-', joinstyle='round')
+        
+        return [boat_hull, sail]
 
     def _initialize_wind_dots(self, x_lim, y_lim):
         """Initialize wind dots within the given plot limits"""
@@ -147,9 +164,10 @@ class BoatVisualizer:
         for i in range(self.num_boats):
             x, y, psi = current_states[i]
             boat_color = self.type_to_color[self.boat_types[i]]
-            boat_patch = self._create_boat_triangle(x, y, psi, color=boat_color)
-            self.boat_patches.append(boat_patch)
-            self.ax.add_patch(boat_patch)
+            boat_patches = self._create_boat_triangle(x, y, psi, color=boat_color)
+            for patch in boat_patches:
+                self.ax.add_patch(patch)
+            self.boat_patches.extend(boat_patches)  # Store all patches for later removal
 
         self._update_trajectories(trajectories)
 
