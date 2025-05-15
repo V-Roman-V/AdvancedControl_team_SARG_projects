@@ -161,11 +161,18 @@ $$
 0 & \frac{1}{m} & 0 \\
 0 & 0 & \frac{1}{I_z}
 \end{bmatrix}
+\left(
 \begin{bmatrix}
-F_x(u)  + F_x^{sail}\\
-F_y(u)  + F_y^{sail}\\
+F_x(u) \\
+F_y(u) \\
 M(u)
+\end{bmatrix} + 
+\begin{bmatrix}
+F_x^{sail} \\
+F_y^{sail} \\
+0 
 \end{bmatrix}
+\right)
 $$
 
 where:
