@@ -2,7 +2,7 @@
 
 ## Overview
 
-This project is focused on the **control** of a motorized boat using adaptive-based control under wind disturbance using Backstepping.
+This project is focused on the **control** of a motorized boat using adaptive-based control under wind disturbance using adaptive backstepping controller.
 
 <img src="images/Boat types.png" alt="Differential vs. steerable thruster configurations" style="width:50%;">
 
@@ -104,8 +104,8 @@ The wind now exerts a **directional force** on the boat's sail, proportional to:
 
   $$
   \begin{aligned}
-   \Delta V_{x}^b &= V_x - V_{wx}^b, \\
-   \Delta V_{y}^b &= V_y - V_{wy}^b.
+   \Delta V_{x}^b &= V_{wx}^b - V_x, \\
+   \Delta V_{y}^b &= V_{wy}^b - V_y.
   \end{aligned}
   $$
 
@@ -222,76 +222,253 @@ where:
 - $u_\phi$ is the control for the steering angle.
 - $L$ is the distance between the motor and the center of the boat.
 
-## Control Design
+## Adaptive Backstepping Controller Design for Boats
 
-### Previous Energy-Based Control
+### Defining Error Coordinates
 
-In the previous project, we developed an energy-based control strategy for motorized boats, using Lyapunov stability theory.
-
-#### **Differential Drive Boat**
-
-The control law for differential drive is derived from an energy function combining position and orientation errors:
+Let the error in global frame be:
 
 $$
-E = \frac{1}{2} k_0 (x_e^2 + y_e^2) + \frac{1}{2} k_1 (V_x^2 + V_y^2) + \frac{1}{2} k_2 \psi_e^2,
+\begin{aligned}
+e_x &= x - x_d \\
+e_y &= y - y_d
+\end{aligned}
+$$
+
+Transform into the body frame:
+
+$$
+\begin{bmatrix} e_f \\ e_s \end{bmatrix}
+= R(\psi)^T \begin{bmatrix} e_x \\ e_y \end{bmatrix}, \quad R(\psi) = \begin{bmatrix} \cos\psi & -\sin\psi \\ \sin\psi & \cos\psi \end{bmatrix}
 $$
 
 where:
 
-- $x_e = x - x_d$, $y_e = y - y_d$ are position errors in body frame,
-- $\psi_e = \psi - \psi_d$ is the heading error (though $\psi_d$ is arbitrary here),
-- $k_0, k_1, k_2$ are positive gains.
+* $e_f$: forward position error
+* $e_s$: lateral position error
 
-Taking the time derivative and substituting dynamics, we obtain the control inputs:
+We aim to design a control law to **drive $(e_f, e_s, V_x, V_y, \omega) \to 0$**.
+
+### Step 1: Position Error Stabilization
+
+Define Lyapunov candidate:
+
+$$
+L_1 = \frac{1}{2}(e_f^2 + e_s^2)
+$$
+
+Its derivative:
+
+$$
+\dot{L}_1 = e_f \dot{e}_f + e_s \dot{e}_s = -e_f V_x - e_s V_y
+$$
+
+Treat $(V_x, V_y)$ as virtual controls. Define desired velocity reference:
 
 $$
 \begin{aligned}
-u_1 &= k_0 x_e - k_1 (x_e V_x + y_e V_y - \omega) - k_2 \psi_e, \\
-u_2 &= k_0 x_e - k_1 (x_e V_x + y_e V_y + \omega) + k_2 \psi_e.
+V_{x}^{\text{des}} &= -k_1 e_f \\
+V_{y}^{\text{des}} &= -k_2 e_s
 \end{aligned}
 $$
 
-**Implementation Notes:**
-
-1. **Clipping**: Thrusters are unidirectional, so inputs are saturated:
-
-$$
-u_1 = \text{clip}(0, u_1, u_{max}), \quad u_2 = \text{clip}(0, u_2, u_{max}).
-$$
-
-2. **Turn-around Case**: If both $u_1, u_2 < 0$, the boat must reverse direction. We enforce:
-
-$$
-\text{If } u_1 < 0 \text{ and } u_2 < 0, \quad \text{set } u_1 = \frac{1}{2} u_{max}, u_2 = 0 \text{ (or vice versa)}.
-$$
-
-
-#### **Steerable Drive Boat**
-
-For steerable thrusters, the energy function is the same:
-
-$$
-E = \frac{1}{2} k_0 (x_e^2 + y_e^2) + \frac{1}{2} k_1 (V_x^2 + V_y^2) + \frac{1}{2} k_2 \psi_e^2.
-$$
-
-The resulting control laws:
+Define velocity error:
 
 $$
 \begin{aligned}
-u_f &= k_0 (x_e^2 + y_e^2) - k_1 (x_e V_x + y_e V_y), \\
-u_\phi &= k_2 \psi_e,
+\bar{e}_x &= V_x - V_{x}^{\text{des}} = V_x + k_1 e_f \\
+\bar{e}_y &= V_y - V_{y}^{\text{des}} = V_y + k_2 e_s \\
+\bar{e}_\omega &= \omega
 \end{aligned}
 $$
 
-where $u_f$ is the thrust magnitude and $u_\phi$ the steering angle.
-
-**Implementation Notes:**
-
-1. **Clipping**:
+Then,
 
 $$
-u_f = \text{clip}(0, u_f, u_{f Max}), \quad u_\phi = \text{clip}(-u_{\phi Max}, u_\phi, u_{\phi Max}).
+\dot{L}_1 = -k_1 e_f^2 - k_2 e_s^2 + e_f \bar{e}_x + e_s \bar{e}_y
 $$
+
+### Step 2: Velocity Error Stabilization
+
+Now use $(F_x, F_y)$ to regulate $(\bar{e}_x, \bar{e}_y)$.
+
+Define:
+
+$$
+L_2 = L_1 + \frac{1}{2}(\bar{e}_x^2 + \bar{e}_y^2 + \bar{e}_\omega^2)
+$$
+
+Its derivative becomes:
+
+$$
+\begin{aligned}
+\dot{L}_2 &= e_f \dot{e}_f + e_s \dot{e}_s + \bar{e}_x \dot{\bar{e}}_x + \bar{e}_y \dot{\bar{e}}_y + \bar{e}_\omega \dot{\bar{e}}_\omega \\
+&= -k_1 e_f^2 - k_2 e_s^2 + e_f \bar{e}_x + e_s \bar{e}_y + \bar{e}_x \dot{V}_x + \bar{e}_y \dot{V}_y + \omega \dot{\omega}
+\end{aligned}
+$$
+
+
+Now substitute dynamics:
+
+$$
+\begin{aligned}
+\dot{V}_x &= \frac{1}{m}(F_x + F_{\text{sail},x}) - D_x V_x \\
+\dot{V}_y &= \frac{1}{m}(F_y + F_{\text{sail},y}) - D_y V_y \\
+\dot{\omega} &= \frac{1}{I_z}(M) - D_\psi \omega
+\end{aligned}
+$$
+
+Substitute into $\dot{L}_2$:
+
+$$
+\begin{aligned}
+\dot{L}_2 &= -k_1 e_f^2 - k_2 e_s^2 + e_f \bar{e}_x + e_s \bar{e}_y \\
+&+ \bar{e}_x \left( \frac{1}{m}(F_x + F_{\text{sail},x}) - D_x V_x \right) \\
+&+ \bar{e}_y \left( \frac{1}{m}(F_y + F_{\text{sail},y}) - D_y V_y \right) \\
+&+ \omega \left( \frac{1}{I_z} M - D_\psi \omega \right)
+\end{aligned}
+$$
+
+Now choose control law:
+
+$$
+\begin{aligned}
+F_x &= -m k_3 \bar{e}_x + m D_x V_x - F_{\text{sail},x} \\
+F_y &= -m k_4 \bar{e}_y + m D_y V_y - F_{\text{sail},y} \\
+M &= -I_z k_5 \omega + I_z D_\psi \omega
+\end{aligned}
+$$
+
+So:
+
+
+$$
+\dot{L}_2 = -k_1 e_f^2 - k_2 e_s^2 - k_3 \bar{e}_x^2 - k_4 \bar{e}_y^2 - k_5 \omega^2
+$$
+
+
+$\Rightarrow$ Asymptotically stable.
+
+### Step 3: Adaptive Control for Unknown Forces
+
+As the $F_{\text{sail}}$ and the damping coefficients $D_x, D_y, D_\psi$ are unknown, we model their combined effects as lumped disturbances:
+
+$$
+\begin{aligned}
+\dot{V}_x &= \frac{1}{m} F_x + \Delta_x \\
+\dot{V}_y &= \frac{1}{m} F_y + \Delta_y \\
+\dot{\omega} &= \frac{1}{I_z} M + \Delta_\psi
+\end{aligned}
+$$
+
+where:
+
+- $\Delta_x = -D_x V_x + \frac{1}{m} F_{\text{sail},x}$
+- $\Delta_y = -D_y V_y + \frac{1}{m} F_{\text{sail},y}$
+- $\Delta_\psi = -D_\psi \omega$
+
+We treat these disturbances as unknown but **linearly parameterized**:
+
+$$
+\Delta_x = \hat{\theta}_x^T \phi_x, \quad
+\Delta_y = \hat{\theta}_y^T \phi_y, \quad
+\Delta_\psi = \hat{\theta}_\psi^T \phi_\psi
+$$
+
+where:
+
+- $\hat{\theta}_*$ are adaptive estimates of unknown parameters,
+- $\phi_*$ are known features (e.g. $\phi_x = [V_x]$, $\phi_y = [V_y]$, $\phi_\psi = [\omega]$).
+
+#### Updated Control Laws with Online Adaptation
+
+We compensate the unknown terms using their estimates:
+
+$$
+\begin{aligned}
+F_x &= -m k_3 \bar{e}_x + m \hat{\theta}_x^T \phi_x \\
+F_y &= -m k_4 \bar{e}_y + m \hat{\theta}_y^T \phi_y \\
+M   &= -I_z k_5 \omega + I_z \hat{\theta}_\psi^T \phi_\psi
+\end{aligned}
+$$
+
+#### Parameter Update Laws
+
+We update the unknown parameters online using a simple adaptive rule:
+
+$$
+\begin{aligned}
+\dot{\hat{\theta}}_x &= \Gamma_x \phi_x \bar{e}_x \\
+\dot{\hat{\theta}}_y &= \Gamma_y \phi_y \bar{e}_y \\
+\dot{\hat{\theta}}_\psi &= \Gamma_\psi \phi_\psi \omega
+\end{aligned}
+$$
+
+where $\Gamma_*$ are positive adaptation gains.
+
+#### Result
+
+With this adaptive controller, the system remains stable, and the controller gradually learns the unknown wind and damping effects, ensuring convergence:
+
+$$
+\dot{L}_2 = -k_1 e_f^2 - k_2 e_s^2 - k_3 \bar{e}_x^2 - k_4 \bar{e}_y^2 - k_5 \omega^2 \le 0
+$$
+
+
+### Differential Drive Controller
+
+From the control law, we compute desired total forward force $F_x$ and yaw moment $M$. For differential thrust, assume:
+
+$$
+\begin{aligned}
+u_1 + u_2 &= F_x \\
+L(u_1 - u_2) &= M
+\end{aligned}
+$$
+
+Solving:
+
+$$
+\begin{aligned}
+u_1 &= \frac{1}{2}\left(F_x + \frac{M}{L}\right) \\
+u_2 &= \frac{1}{2}\left(F_x - \frac{M}{L}\right)
+\end{aligned}
+$$
+
+
+### Steerable Thruster Controller
+
+Given:
+
+$$
+\begin{aligned}
+F_x &= u_f \cos u_\phi \\
+F_y &= u_f \sin u_\phi \\
+M &= L \cdot u_f \sin(u_\phi) = L \cdot F_y
+\end{aligned}
+$$
+
+We recover thrust magnitude and steering angle from control forces:
+
+$$
+\begin{aligned}
+u_\phi &= \text{atan2}(F_y, F_x) \\
+u_f &= \sqrt{F_x^2 + F_y^2}
+\end{aligned}
+$$
+
+## 7. Summary of the Adaptive Control Law
+
+| Component                | Expression                                                                 |
+|--------------------------|----------------------------------------------------------------------------|
+| Desired velocities       | $V_x = -k_1 e_f$, $V_y = -k_2 e_s$                                         |
+| Velocity errors          | $\bar{e}_x = V_x + k_1 e_f$, $\bar{e}_y = V_y + k_2 e_s$, $\bar{e}_\omega = \omega$ |
+| Force commands           | $F_x = -m k_3 \bar{e}_x + m \hat{\theta}_x^T \phi_x$                      |
+|                          | $F_y = -m k_4 \bar{e}_y + m \hat{\theta}_y^T \phi_y$                      |
+| Moment command           | $M = -I_z k_5 \omega + I_z \hat{\theta}_\psi^T \phi_\psi$                 |
+| Thruster Mapping (diff)  | $u_1 = \frac{1}{2}(F_x + M/L)$, $u_2 = \frac{1}{2}(F_x - M/L)$             |
+| Thruster Mapping (steer) | $u_f = \sqrt{F_x^2 + F_y^2}$, $u_\phi = \text{atan2}(F_y, F_x)$           |
+
 
 ### Old energy-based control with wind:
 
