@@ -18,16 +18,16 @@ The boat can finish at any angle. The thruster force can only be applied in the 
 To test the control system under varying environmental conditions, we implemented **three distinct wind field models**:
 
 1. **Cosine Wind Field**:
-   A spatially varying wind defined by sinusoidal functions, simulating periodic gusts.
+  A spatially varying wind defined by sinusoidal functions, simulating periodic gusts.
 
-   $$
-   V(x,y) = A \left(1 + B \cos \left( \frac{2\pi d}{\lambda} \right) \right)
-   $$  
+$$
+V(x,y) = A \left(1 + B \cos \left( \frac{2\pi d}{\lambda} \right) \right)
+$$  
 
-   where:
-     - $A$, $B$ are `base_speed` and wave `amplitude`
-     - $d$ is a `distance` aling wind direction
-     - $\lambda$ is a `wavelength`.  
+  where:
+    - $A$, $B$ are `base_speed` and wave `amplitude`
+    - $d$ is a `distance` aling wind direction
+    - $\lambda$ is a `wavelength`.  
 
 2. **Perlin Noise Wind Field**:  
    A procedurally generated turbulent wind using Perlin noise, mimicking natural randomness. 
@@ -168,9 +168,9 @@ F_y(u) \\
 M(u)
 \end{bmatrix} + 
 \begin{bmatrix}
-F_{sail,x} \\
-F_{sail,y} \\
-0
+F_{sail, x} \\
+F_{sail, y} \\
+0 
 \end{bmatrix}
 \right)
 $$
@@ -301,7 +301,7 @@ Compute its derivative:
 
 $$
 \begin{aligned}
-\dot{L}_2 &= -e_f \bar{e_x} + e_\psi (-\bar{e_\omega} + k_2 e_\psi) + \bar{e_x} \dot{V_x} + \bar{e_\omega} \dot{\omega} \\
+\dot{L_2} &= -e_f \bar{e_x} + e_\psi (-\bar{e_\omega} + k_2 e_\psi) + \bar{e_x} \dot{V_x} + \bar{e_\omega} \dot{\omega} \\
 &= -k_1 e_f^2 - k_2 e_\psi^2 + \bar{e_x} \dot{V_x} + \bar{e_\omega} \dot{\omega}
 \end{aligned}
 $$
@@ -396,9 +396,9 @@ This gives a unique solution as long as $L \neq 0$ and thrust is always forward 
 | Component                | Expression                                                                 |
 |--------------------------|----------------------------------------------------------------------------|
 | Desired velocities       | $V_x = k_1 e_f$, $\omega = -k_2 e_\psi$                                    |
-| Velocity errors          | $\bar{e}_x = V_x - k_1 e_f$, $\bar{e}_\omega = \omega + k_2 e_\psi$        |
+| Velocity errors          | $\bar{e_x} = V_x - k_1 e_f$, $\bar{e_\omega} = \omega + k_2 e_\psi$        |
 | Force command            | $F_x = -m k_3 \bar{e}_x + m \hat{\theta}_x^T \phi_x$                       |
-| Moment command           | $M = -I_z k_4 \bar{e}_\omega + I_z \hat{\theta}_\psi^T \phi_\psi$          |
+| Moment command           | $M = -I_z k_4 \bar{e_\omega} + I_z \hat{\theta_\psi^T} \phi_\psi$          |
 | Adaptive update laws     | $\dot{\hat{\theta_x}} = \Gamma_x \phi_x \bar{e_x}$, $\dot{\hat{\theta_\psi}} = \Gamma_\psi \phi_\psi \bar{e_\omega}$ |
 | Thruster Mapping (diff)  | $u_1 = \frac{1}{2}(F_x + M/L)$, $u_2 = \frac{1}{2}(F_x - M/L)$             |
 | Thruster Mapping (steer) | $u_\phi = \text{atan2}(M / L, F_x)$, $u_f = \sqrt{F_x^2 + \left(\frac{M}{L}\right)^2}$ |
