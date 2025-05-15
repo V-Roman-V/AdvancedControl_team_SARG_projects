@@ -162,8 +162,8 @@ $$
 0 & 0 & \frac{1}{I_z}
 \end{bmatrix}
 \begin{bmatrix}
-F_x(u)  + F_{sail, x}\\
-F_y(u)  + F_{sail, y}\\
+F_x(u)  + F_x^{sail}\\
+F_y(u)  + F_y^{sail}\\
 M(u)
 \end{bmatrix}
 $$
