@@ -12,8 +12,8 @@ class BoatState:
     Vx: float  # Body-frame x velocity
     Vy: float  # Body-frame y velocity
     omega: float
-    Wx: float # estimation of the Wind: global x velocity
-    Wy: float # estimation of the Wind: global y velocity  
+    adapt_param1: float # estimation of the forward force uncertanty
+    adapt_param2: float # estimation of the Moment force uncertanty
 
     @classmethod
     def from_array(cls, arr: np.ndarray) -> 'BoatState':
@@ -24,20 +24,20 @@ class BoatState:
 
     def to_array(self) -> np.ndarray:
         """Converts the boat state to a numpy array."""
-        return np.array([self.x, self.y, self.psi, self.Vx, self.Vy, self.omega, self.Wx, self.Wy])
+        return np.array([self.x, self.y, self.psi, self.Vx, self.Vy, self.omega, self.adapt_param1, self.adapt_param2])
 
     def update(self, derivatives: np.ndarray, dt: float) -> None:
         """Updates the boat state using Euler integration."""
         if len(derivatives) != 8:
-            raise ValueError("Derivatives must have exactly 6 elements.")
+            raise ValueError("Derivatives must have exactly 8 elements.")
         self.x += derivatives[0] * dt
         self.y += derivatives[1] * dt
         self.psi += derivatives[2] * dt
         self.Vx += derivatives[3] * dt
         self.Vy += derivatives[4] * dt
         self.omega += derivatives[5] * dt
-        self.Wx += derivatives[6] * dt
-        self.Wy += derivatives[7] * dt
+        self.adapt_param1 += derivatives[6] * dt
+        self.adapt_param2 += derivatives[7] * dt
 
 
 @dataclass
@@ -117,9 +117,9 @@ class Boat:
         domega = (M / self.params.inertia) - self.params.damping[2] * self.state.omega
         return np.array([dx, dy, dpsi, dVx, dVy, domega])
 
-    def update_state(self, control: np.ndarray, wind_derivatives: np.ndarray, dt: float) -> None:
+    def update_state(self, control: np.ndarray, adaptation_derivatives: np.ndarray, dt: float) -> None:
         """Updates state using Euler integration."""
-        derivatives = np.concatenate([self.dynamics(control), wind_derivatives])
+        derivatives = np.concatenate([self.dynamics(control), adaptation_derivatives])
         self.state.update(derivatives, dt)
 
 

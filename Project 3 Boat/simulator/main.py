@@ -62,8 +62,8 @@ class Simulation:
             states, controls = [], []
             for i, boat in enumerate(self.boats):
                 state = boat.state.to_array()
-                u, wind_derivatives = self.controllers[i].compute_control(state, self.visualizer.desired_trajs[i])
-                boat.update_state(u, wind_derivatives, self.dt)
+                u, adapt_derivative = self.controllers[i].compute_control(state, self.visualizer.desired_trajs[i])
+                boat.update_state(u, adapt_derivative, self.dt)
                 self.trajectories[i].append(state)
                 states.append(state[:3])
                 controls.append(u)
