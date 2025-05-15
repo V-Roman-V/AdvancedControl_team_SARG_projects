@@ -122,8 +122,8 @@ class BoatVisualizer:
         y_min, y_max = np.min(all_y), np.max(all_y)
         x_pad = (x_max - x_min) * 0.05
         y_pad = (y_max - y_min) * 0.05
-        x_lim = (np.min(all_x) - x_pad, np.max(all_x) + x_pad)
-        y_lim = (np.min(all_y) - y_pad, np.max(all_y) + y_pad)
+        x_lim = (x_min - x_pad, x_max + x_pad)
+        y_lim = (y_min - y_pad, y_max + y_pad)
         self.ax.set_xlim(x_lim)
         self.ax.set_ylim(y_lim)
 

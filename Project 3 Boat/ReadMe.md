@@ -2,7 +2,7 @@
 
 ## Overview
 
-This project is focused on the **control** of a motorized boat using adaptive-based control under wind disturbance.
+This project is focused on the **control** of a motorized boat using adaptive-based control under wind disturbance using Backstepping.
 
 <img src="images/Boat types.png" alt="Differential vs. steerable thruster configurations" style="width:50%;">
 
@@ -11,8 +11,53 @@ This project is focused on the **control** of a motorized boat using adaptive-ba
 Given the initial state $\mathbf{x}_i$ and a desired position $\mathbf{x}_d$, the goal is to design a control law $\mathbf{u} = [u_1, u_2]^T$ such that the boat will reach the desired position with zero velocity, despite wind disturbances.
 The boat can finish at any angle. The thruster force can only be applied in the forward direction.
 
-### Results of old controller for the new task definition
-![alt text](<simulator/gif/simulation_with_old_control.gif>)
+## Updated Wind Fields
+
+To test the control system under varying environmental conditions, we implemented **three distinct wind field models**:
+
+1. **Cosine Wind Field**:
+   A spatially varying wind defined by sinusoidal functions, simulating periodic gusts.
+
+   $$
+   V(x,y) = A \left(1 + B\cos\left(\frac{2\pi \text{ dist}}{\lambda}\right)\right)
+   $$  
+
+   where:
+     - $A$, $B$ are `base_speed` and wave `amplitude`
+     - $\text{dist}$ is a `distance` aling wind direction
+     - $\lambda$ is a `wavelength`.  
+
+2. **Perlin Noise Wind Field**:  
+   A procedurally generated turbulent wind using Perlin noise, mimicking natural randomness. 
+
+3. **Constant Directional Wind**:  
+   A uniform wind $(V_{wx}, V_{wy})$ with fixed magnitude/direction.  
+
+![alt text](images/Different_wind_types.png)  
+*Figure: Visualization of the three wind field types (cosine, Perlin noise, constant) used in simulations.*  
+
+
+## Boats experience additional **unknown** drag effects from Water
+
+Beyond wind disturbances, the boats are subject to hydrodynamic drag forces that dissipate kinetic energy. These effects are **modeled as unmeasured damping terms** in the dynamics:  
+
+$$
+\begin{aligned}
+\dot{V}_f &= -D_f \cdot V_f \quad &\text{(Surge damping)}, \\
+\dot{V}_s &= -D_s \cdot V_s \quad &\text{(Sway damping)}, \\
+\dot{\omega} &= -D_ψ \cdot \omega \quad &\text{(Yaw damping)},
+\end{aligned}
+$$
+
+where:
+
+- $V_f, V_s$ are surge/sway velocities in the body frame,  
+- $\omega$ is the yaw rate,  
+- $D_f, D_s, D_ψ$ are unknown damping coefficients.  
+
+Demonstration of the Drag Force:  
+![alt text](simulator/gif/Drag_force_without_control.gif)  
+![alt text](images/Velocity_decay.png)
 
 ## Mathematical Model
 
