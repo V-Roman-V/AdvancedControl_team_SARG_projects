@@ -82,7 +82,7 @@ where:
 
 The wind now exerts a **directional force** on the boat's sail, proportional to:
 1. The **projected sail area** facing the wind (cosine of relative angle).
-2. The **squared speed difference** between wind and boat (Bernoulli principle).
+2. The **speed difference** between wind and boat (Bernoulli principle).
 
 <img src="images/Wind_force.png" alt="Wind force" style="width:40%;">
 
