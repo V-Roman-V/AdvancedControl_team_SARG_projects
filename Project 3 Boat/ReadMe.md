@@ -24,10 +24,10 @@ $$
 V(x,y) = A \left(1 + B \cos \left( \frac{2\pi d}{\lambda} \right) \right)
 $$  
 
-  where:
-    - $A$, $B$ are `base_speed` and wave `amplitude`
-    - $d$ is a `distance` aling wind direction
-    - $\lambda$ is a `wavelength`.  
+where:
+  - $A$, $B$ are `base_speed` and wave `amplitude`
+  - $d$ is a `distance` aling wind direction
+  - $\lambda$ is a `wavelength`.  
 
 2. **Perlin Noise Wind Field**:  
    A procedurally generated turbulent wind using Perlin noise, mimicking natural randomness. 
@@ -161,18 +161,11 @@ $$
 0 & \frac{1}{m} & 0 \\
 0 & 0 & \frac{1}{I_z}
 \end{bmatrix}
-\left(
 \begin{bmatrix}
-F_x(u) \\
-F_y(u) \\
+F_x(u)  + F_{sail, x}\\
+F_y(u)  + F_{sail, y}\\
 M(u)
-\end{bmatrix} + 
-\begin{bmatrix}
-F_{sail, x} \\
-F_{sail, y} \\
-0 
 \end{bmatrix}
-\right)
 $$
 
 where:
