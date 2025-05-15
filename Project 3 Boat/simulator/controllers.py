@@ -69,6 +69,7 @@ class DifferentialController(Controller):
         # Velocity tracking errors
         e_bar_x = Vx - Vx_des
         e_bar_omega = omega - omega_des
+
         # --- Step 3: Compute control force/moment ---
         Fx = -self.boat_params.mass * self.k3 * e_bar_x + self.boat_params.mass * adapt_param1
         M = -self.boat_params.inertia * self.k4 * e_bar_omega + self.boat_params.inertia * adapt_param2
@@ -81,7 +82,7 @@ class DifferentialController(Controller):
 
         if u1 < 0 and u2 < 0:
             Fx = np.clip(Fx, - 0.8 * self.control_limit, 0.8 * self.control_limit)
-        elif u1 > self.control_limit and u2 > self.control_limit:
+        elif abs(M) > 0.4 and u1 > self.control_limit and u2 > self.control_limit:
             Fx = np.clip(Fx, - 0.8 * self.control_limit, 0.8 * self.control_limit)
         u1 = 0.5 * (Fx + M / self.boat_params.L)
         u2 = 0.5 * (Fx - M / self.boat_params.L)
@@ -132,13 +133,14 @@ class SteeringController(Controller):
         self.control_limit = control_limit
 
         m = self.boat_params.mass
+        i = self.boat_params.inertia
         # Controller gains and adaptation rates
-        self.k1 = 1.21 / m # Transitional 
-        self.k2 = 0.64 # Rotational
-        self.k3 = 2.2 / m # Transitional = 2*sqrt(k1)
-        self.k4 = 1.6 # Rotational = 2*sqrt(k2)
-        self.gamma1 = 0 #0.15
-        self.gamma2 = 0 #0.003
+        self.k1 = 200 / m # Transitional 
+        self.k2 = 100 / i # Rotational
+        self.k3 = 130 / m # Transitional = 2*sqrt(k1)
+        self.k4 = 200 / i # Rotational = 2*sqrt(k2)
+        self.gamma1 = 0.005
+        self.gamma2 = 0.003
 
     def compute_control(self, state: np.ndarray, state_des: np.ndarray) -> np.ndarray:
         """
@@ -150,6 +152,7 @@ class SteeringController(Controller):
         """
         # --- Step 1: Extract states ---
         x, y, psi, Vx, Vy, omega, adapt_param1, adapt_param2 = state
+        omega = -omega
         x_d, y_d = state_des[:2]
 
         # --- Step 2: Error calculation ---
@@ -157,31 +160,25 @@ class SteeringController(Controller):
         e_y = y_d - y
         psi_d = np.arctan2(e_y, e_x)
         e_psi = self._wrap_angle(psi - psi_d)
-        if abs(e_psi) > np.pi/2:
-            e_psi += np.pi
 
         # Forward error
-        e_f = np.cos(e_psi) * e_x + np.sin(e_psi) * e_y
+        e_f = (np.cos(e_psi) * e_x + np.sin(e_psi) * e_y) * np.sign(x)
 
         # Desired virtual velocities
-        Vx_des = self.k1 * e_f
-        omega_des = -self.k2 * e_psi
+        Vx_des = -self.k1 * e_f
+        omega_des = self.k2 * e_psi
 
         # Velocity tracking errors
         e_bar_x = Vx - Vx_des
         e_bar_omega = omega - omega_des
 
-        # Regressor vectors
-        phi_x = np.array([Vx])
-        phi_psi = np.array([omega])
-
         # --- Step 3: Compute control ---
-        Fx = -self.boat_params.mass * self.k3 * e_bar_x #+ self.boat_params.mass * adapt_param1 * phi_x[0]
-        M = -self.boat_params.inertia * self.k4 * e_bar_omega #+ self.boat_params.inertia * adapt_param2 * phi_psi[0]
+        Fx = -self.boat_params.mass * self.k3 * e_bar_x - self.boat_params.mass * adapt_param1
+        M = -self.boat_params.inertia * self.k4 * e_bar_omega + self.boat_params.inertia * adapt_param2
+        # print(f"Fx = {Fx:.3f} A={self.boat_params.mass * self.k3 * e_bar_x:.3f} fix={self.boat_params.mass * adapt_param1:.3f} | M = {M:.3f} fix={self.boat_params.inertia * adapt_param2:.3f}")
 
-        # print(f"{e_f = } {e_bar_x = } {Fx = } | {e_psi = } {e_bar_omega = } {M = }")
         # --- Step 4: Convert to polar thruster commands ---
-        u_phi = np.arctan2(M / self.boat_params.L, Fx)
+        u_phi = -np.arctan2(M / self.boat_params.L, Fx)
         u_f = np.sqrt(Fx**2 + (M / self.boat_params.L)**2)
 
         # --- Step 5: Turnaround logic ---
@@ -194,8 +191,11 @@ class SteeringController(Controller):
         u_phi = np.clip(self._wrap_angle(u_phi), -self.control_limit[1], self.control_limit[1])
 
         # --- Step 7: Adaptation law ---
-        dAp_1 = self.gamma1 * phi_x[0] * e_bar_x
-        dAp_2 = self.gamma2 * phi_psi[0] * e_bar_omega
+        coeff = 1
+        if abs(e_f) < 0.1:
+            coeff = 2
+        dAp_1 = self.gamma1 * e_bar_x * coeff
+        dAp_2 = self.gamma2 * e_bar_omega
 
         # Return thruster commands and Adaptation derivatives
         return np.array([u_f, u_phi]), np.array([dAp_1, dAp_2])

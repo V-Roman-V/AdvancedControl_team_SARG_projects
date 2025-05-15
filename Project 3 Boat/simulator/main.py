@@ -17,7 +17,7 @@ class Simulation:
         self.boats = []
         self.controllers = []
         self.visualizer = None
-        self.control_limits = {'differential': 20, 'steerable': [40, np.pi/2]}
+        self.control_limits = {'differential': 50, 'steerable': [100, np.pi/2]}
         self.boat_parameters = BoatParameters(
             mass=500, 
             inertia=200, 
@@ -51,12 +51,6 @@ class Simulation:
             wind_field=self.wind_field,
         )
 
-    def print_wind(self):
-        for type, boat in zip(self.boat_types, self.boats):
-            print(f"{boat.state.Wx:.3f}, {boat.state.Wy:.3f}, | {type}")
-        print('-----')
-        # print(self.wind_field)
-
     def simulate(self):
         for frame, t in enumerate(tqdm(self.time)):
             states, controls = [], []
@@ -73,7 +67,7 @@ class Simulation:
                 self.visualizer.update(states, self.trajectories, t, controls, self.dt * self.update_vis_every_n_frame)
         print("finalize")
         self.visualizer.create_target_phase_plot(self.trajectories, self.visualizer.desired_trajs, save_path='target_phase_plot.png')
-        self.visualizer.create_estimated_wind_plot(self.trajectories, save_path='wind_estimates_plot.png')
+        # self.visualizer.create_estimated_wind_plot(self.trajectories, save_path='wind_estimates_plot.png')
         self.visualizer.create_control_plot(self.control_histories, self.boat_types, save_path='control_plot.png')
         self.visualizer.finalize()
 
@@ -113,14 +107,13 @@ wind_field_types = {
 }
 
 def main():
-    T, dt = 300, 1
+    T, dt = 125, 0.2
 
     wind_field = wind_field_types['cosine']
     boat_types, init_states, desired_states = generate_random_boats(20)
     sim = Simulation(T, dt, 'gif', wind_field, boat_types)
     sim.initialize(init_states, desired_states)
     sim.simulate()
-    sim.print_wind()
 
 if __name__ == "__main__":
     main()
