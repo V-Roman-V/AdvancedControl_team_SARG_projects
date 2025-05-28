@@ -50,7 +50,7 @@ class CartPoleVisualizer:
                                        color='black', lw=3, zorder=3)
 
     def update(self, state, t):
-        x, x_dot, theta, theta_dot = state
+        x, _, theta, _ = state
         self._draw_cart_pole(x, theta)
 
         # Trajectory plot
@@ -65,9 +65,12 @@ class CartPoleVisualizer:
             self.fig.canvas.flush_events()
         elif self.mode == 'gif':
             self.fig.canvas.draw()
-            image = np.frombuffer(self.fig.canvas.tostring_rgb(), dtype=np.uint8)
-            image = image.reshape(self.fig.canvas.get_width_height()[::-1] + (3,))
-            self.frames.append(image)
+            # Use buffer_rgba() for Agg backend and convert RGBA to RGB
+            width, height = self.fig.canvas.get_width_height()
+            image = np.frombuffer(self.fig.canvas.buffer_rgba(), dtype=np.uint8)
+            image = image.reshape((height, width, 4))
+            image_rgb = image[..., :3].copy()  # Drop alpha channel
+            self.frames.append(image_rgb)
 
     def finalize(self, save_path='./cartpole.gif'):
         if self.mode == 'final':
