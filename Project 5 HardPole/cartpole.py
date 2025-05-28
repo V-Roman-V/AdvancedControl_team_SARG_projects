@@ -9,7 +9,7 @@ class CartPoleParams:
     g: float = 9.81          # gravity
     damping: float = 30    # simple friction coefficient
     rotary_damping: float = 0.3  # pole angular damping
-    max_force: float = 100.0
+    max_force: float = 300.0
 
 class CartPole:
     def __init__(self, init_state: np.ndarray, params: CartPoleParams = None):

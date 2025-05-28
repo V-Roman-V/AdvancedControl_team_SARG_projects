@@ -32,7 +32,7 @@ class Simulation:
             self.controls.append(control)
 
             if frame_idx % self.update_vis_every_n_frame == 0:
-                self.visualizer.update(state, t)
+                self.visualizer.update(state, control, t)
 
         self.visualizer.finalize('./cartpole.gif')
 

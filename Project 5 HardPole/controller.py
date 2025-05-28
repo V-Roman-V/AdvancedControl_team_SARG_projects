@@ -42,14 +42,16 @@ class Controller(BaseCartPoleController):
         self.theta_integral = 0.0
 
     def compute_control(self, state: np.ndarray, dt: float = 0.02) -> float:
+        control = 0
         if self.method == "pd":
-            return self._compute_pd_control(state, dt)
+            control = self._compute_pd_control(state, dt)
         elif self.method == "energy":
-            return self._compute_energy_control(state)
+            control = self._compute_energy_control(state)
         elif self.method == "hybrid":
-            return self._compute_hybrid_control(state, dt)
+            control = self._compute_hybrid_control(state, dt)
         else:
             raise ValueError(f"Unknown control method: {self.method}")
+        return np.clip(control, -self.cartpole_params.max_force, self.cartpole_params.max_force)
 
     def _compute_hybrid_control(self, state: np.ndarray, dt: float) -> float:
         x, x_dot, theta, theta_dot = state
