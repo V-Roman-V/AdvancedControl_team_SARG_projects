@@ -118,7 +118,7 @@ class PerlinWindField(IWindField):
         
         return (wind_x, wind_y)
 
-    def plot_wind_field(self, x_range=(-10, 10), y_range=(-10, 10), grid_step=0.5, size_mult=250, ax=None, alpha=0.5):
+    def plot_wind_field(self, x_range=(-10, 10), y_range=(-10, 10), grid_step=0.5, size_mult=20, ax=None, alpha=0.5):
         super().plot_wind_field(x_range=x_range, y_range=y_range, grid_step=grid_step, size_mult=size_mult, ax=ax, alpha=alpha)
 
 

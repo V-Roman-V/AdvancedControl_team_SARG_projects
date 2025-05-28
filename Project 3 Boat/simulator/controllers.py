@@ -122,7 +122,7 @@ class DifferentialController(Controller):
         dAp_2 = -self.gamma2 * e_bar_omega
 
         # Return thruster commands and Adaptation derivatives
-        return np.array([u1, u2]), np.array([dAp_1, dAp_2])
+        return np.array([u1, u2]), np.array([dAp_1, dAp_2]), np.array([[Vx, Vx_des], [omega, omega_des]])
 
 class SteeringController(Controller):
     """
@@ -135,9 +135,9 @@ class SteeringController(Controller):
         m = self.boat_params.mass
         i = self.boat_params.inertia
         # Controller gains and adaptation rates
-        self.k1 = 200 / m # Transitional 
+        self.k1 = 300 / m # Transitional 
         self.k2 = 100 / i # Rotational
-        self.k3 = 130 / m # Transitional = 2*sqrt(k1)
+        self.k3 = 180 / m # Transitional = 2*sqrt(k1)
         self.k4 = 200 / i # Rotational = 2*sqrt(k2)
         self.gamma1 = 0.005
         self.gamma2 = 0.003
@@ -198,4 +198,4 @@ class SteeringController(Controller):
         dAp_2 = self.gamma2 * e_bar_omega
 
         # Return thruster commands and Adaptation derivatives
-        return np.array([u_f, u_phi]), np.array([dAp_1, dAp_2])
+        return np.array([u_f, u_phi]), np.array([dAp_1, dAp_2]), np.array([[Vx, Vx_des], [omega, omega_des]])

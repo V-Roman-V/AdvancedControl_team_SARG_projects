@@ -25,7 +25,7 @@ class Simulation:
             L=1,                     # Distance from CoM to thruster
             air_density=1.225,       # kg/m³ (standard air)
             sail_Cx=25,             # Surge drag coefficient  
-            sail_Cy=1,             # Sway drag coefficient
+            sail_Cy=25,             # Sway drag coefficient
             sail_area=10,           # m² (example sail area)
         )
         self.mode=mode
@@ -56,7 +56,7 @@ class Simulation:
             states, controls = [], []
             for i, boat in enumerate(self.boats):
                 state = boat.state.to_array()
-                u, adapt_derivative = self.controllers[i].compute_control(state, self.visualizer.desired_trajs[i])
+                u, adapt_derivative, vel_history = self.controllers[i].compute_control(state, self.visualizer.desired_trajs[i])
                 boat.update_state(u, adapt_derivative, self.dt)
                 self.trajectories[i].append(state)
                 states.append(state[:3])
@@ -101,15 +101,15 @@ def generate_random_boats(num_boats, seed=42, goal=(0, 0)):
     return boat_types, init_states, desired_states
 
 wind_field_types = {
-    "cosine": WindModel.create('cosine', base_speed=0.08, direction=45, wavelength=0.07, amplitude=0.6),
-    "perlin": WindModel.create('perlin', max_speed=0.1, scale=5, random_seed=42),
-    "constant": WindModel.create('constant', speed=0.1, direction=-45)
+    "cosine": WindModel.create('cosine', base_speed=0.38, direction=45, wavelength=0.07, amplitude=0.6),
+    "perlin": WindModel.create('perlin', max_speed=1.7, scale=5, random_seed=42),
+    "constant": WindModel.create('constant', speed=0.2, direction=-45)
 }
 
 def main():
-    T, dt = 80, 0.2
+    T, dt = 200, 0.2
 
-    wind_field = wind_field_types['constant']
+    wind_field = wind_field_types['perlin']
     boat_types, init_states, desired_states = generate_random_boats(20)
     sim = Simulation(T, dt, 'gif', wind_field, boat_types)
     sim.initialize(init_states, desired_states)

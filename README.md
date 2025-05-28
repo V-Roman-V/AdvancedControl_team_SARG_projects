@@ -18,3 +18,14 @@ Group repository for projects on the Advanced Control course
 ![Wind field](<Project 2 Boat/images/Find_field.png>)
 
 ![Wind simulation](<Project 2 Boat/simulator/gif/simulation_with_different_wind.gif>)
+
+## Project 3: Motorized Vessel Control with High Wind disturbance
+
+### Boats dragged by the wind:
+
+![wind drag](<Project 3 Boat/simulator/gif/boats_dragged_by_the_wind.gif>)
+
+### Backstepping:
+
+![cosine wind](<Project 3 Boat/simulator/gif/cosine_wind.gif>)
+![hard perling wind](<Project 3 Boat/simulator/gif/Hard_wind_with_big_sway_coeff.gif>)

@@ -548,6 +548,7 @@ $$
 ![alt text](simulator/gif/constant_wind.gif)
 ![alt text](simulator/gif/cosine_wind.gif)
 ![alt text](simulator/gif/perlin_wind.gif)
+![alt text](simulator/gif/Hard_wind_with_big_sway_coeff.gif)
 
 ### Phase plot
 
