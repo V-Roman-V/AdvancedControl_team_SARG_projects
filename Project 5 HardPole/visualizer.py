@@ -6,7 +6,7 @@ import imageio
 class CartPoleVisualizer:
     def __init__(self, mode='realtime'):
         self.mode = mode
-        self.fig, self.ax = plt.subplots(figsize=(10, 6))
+        self.fig, self.ax = plt.subplots(figsize=(18, 6))
         self.frames = []
 
         self.cart_patch = None

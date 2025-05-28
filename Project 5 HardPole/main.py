@@ -1,31 +1,31 @@
 import numpy as np
 from cartpole import CartPole
-from controller import CartPoleController
+from controller import Controller, ControlParams
 from visualizer import CartPoleVisualizer
 from tqdm import tqdm
 
 class Simulation:
-    def __init__(self, T=10.0, dt=0.02, mode='realtime'):
+    def __init__(self, T=10.0, dt=0.02, frame_numbers = 150, mode='realtime'):
         self.T = T
         self.dt = dt
         self.mode = mode
         self.time = np.arange(0, T, dt)
-        self.cartpole = None
         self.controller = None
+        self.cartpole = None
         self.visualizer = CartPoleVisualizer(mode=mode)
         self.trajectory = []
         self.controls = []
-        self.frame_numbers = 150
+        self.frame_numbers = frame_numbers
         self.update_vis_every_n_frame = len(self.time) // self.frame_numbers
 
-    def initialize(self, init_state):
-        self.cartpole = CartPole(init_state)
-        self.controller = CartPoleController()
+    def initialize(self,cartpole:CartPole, controller:Controller):
+        self.controller = controller
+        self.cartpole = cartpole
 
     def simulate(self):
         for frame_idx, t in enumerate(tqdm(self.time)):
             state = self.cartpole.state
-            control = self.controller.compute_control(state)
+            control = self.controller.compute_control(state, self.dt)
             self.cartpole.update(control, self.dt)
 
             self.trajectory.append(state.copy())
@@ -36,12 +36,21 @@ class Simulation:
 
         self.visualizer.finalize('./cartpole.gif')
 
-
 def main():
-    # Initial state: [x, x_dot, theta, theta_dot]
-    init_state = np.array([0.0, 0.0, np.pi - 0.05, 0.0])  # Slightly perturbed downward
-    sim = Simulation(T=10.0, dt=0.02, mode='gif')
-    sim.initialize(init_state)
+    #create cartpole instance
+    init_state = np.array([1.0, 0.0, np.pi + 0.05, 0.0])  # Start nearly hanging downward
+    cartpole = CartPole(init_state)
+
+    #create controller instance
+    pd = ControlParams.PDParams(k_theta_p=10.0, k_theta_d=1.0, k_x_p=10.0, k_x_d=1.0)
+    energy = ControlParams.EnergyParams(k_energy=5.0)
+    hybrid = ControlParams.HybridParams(switch_angle_deg=15.0)
+    params = ControlParams(pd=pd, energy=energy,hybrid=hybrid)
+
+    controller = Controller(method="hybrid", params=params)
+
+    sim = Simulation(T=5.0, dt=0.01, frame_numbers=150, mode='realtime')
+    sim.initialize(cartpole, controller)
     sim.simulate()
 
 if __name__ == "__main__":
