@@ -38,7 +38,7 @@ class Simulation:
 
 def main():
     #create cartpole instance
-    init_state = np.array([-1, 0.0, np.pi/2+0.5, 0.0])  # Start nearly hanging downward
+    init_state = np.array([-1, 0.0, 0.1, 0.0])  # Start nearly hanging downward
     cartpole = CartPole(init_state)
 
     #create controller instance
@@ -47,9 +47,9 @@ def main():
     hybrid = ControlParams.HybridParams(switch_angle_deg=45.0)
     params = ControlParams(pd=pd, energy=energy,hybrid=hybrid)
 
-    controller = Controller(method="pd", params=params)
+    controller = Controller(method="energy", params=params)
 
-    sim = Simulation(T=60.0, dt=0.001, frame_numbers=400, mode='gif')
+    sim = Simulation(T=5.0, dt=0.001, frame_numbers=400, mode='gif')
     sim.initialize(cartpole, controller)
     sim.simulate()
 

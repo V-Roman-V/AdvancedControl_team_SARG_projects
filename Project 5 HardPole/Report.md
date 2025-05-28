@@ -17,3 +17,8 @@ From the bottom:
 ![alt text](gif/cartpole_pid_down.gif)
 
 
+# Compare with energy
+
+Didnt work
+
+![alt text](gif/cartpole_energy.gif)
