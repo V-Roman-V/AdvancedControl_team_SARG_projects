@@ -16,6 +16,11 @@ From the bottom:
 
 ![alt text](gif/cartpole_pid_down.gif)
 
+![alt text](gif/cartpole_pid_bang_bang.gif)
+
+Tuning pd add Integral part to the position and tune koeficient we got realy good result:
+
+![alt text](gif/cartpole_pose_pid.gif)
 
 # Compare with energy
 

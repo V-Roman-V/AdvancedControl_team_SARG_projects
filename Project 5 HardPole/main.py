@@ -42,7 +42,7 @@ class Simulation:
 
 def main():
     #create cartpole instance
-    init_state = np.array([-1, 0.0, np.pi/2+0.05, 0.0])  # Start nearly hanging downward
+    init_state = np.array([-1, 0.0, np.pi+0.05, 0.0])  # Start nearly hanging downward
     cartpole = CartPole(init_state)
 
     #create controller instance
@@ -52,12 +52,11 @@ def main():
     # pd = ControlParams.PDParams(k_theta_p=1500.0, k_theta_d=100.0, k_theta_i=100, k_theta_i_dur=0.2, k_x_p=1.0, k_x_d=-50.0) # stable
     pd = ControlParams.PDParams(k_theta_p=300.0, k_theta_d=100.0, k_x_p=1.0, k_x_d=-50.0, k_x_i=100, k_x_i_dur=0.2) # fast stable
     energy = ControlParams.EnergyParams(k_energy=25.0)
-    hybrid = ControlParams.HybridParams(switch_angle_deg=45.0)
-    params = ControlParams(pd=pd, energy=energy,hybrid=hybrid)
+    params = ControlParams(pd=pd, energy=energy)
 
     controller = Controller(method="pd", params=params)
 
-    sim = Simulation(T=7, dt=0.001, frame_numbers=140, mode='realtime')
+    sim = Simulation(T=7, dt=0.001, frame_numbers=130, mode='gif')
     sim.initialize(cartpole, controller)
     sim.simulate(wait_time = 1.5)
 

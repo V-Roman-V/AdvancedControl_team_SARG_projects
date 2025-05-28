@@ -20,16 +20,13 @@ class ControlParams:
         k_x_d: float = 150.0
         k_x_i: float = 1.0
         k_x_i_dur: float = 2.0  # integral duration in seconds
+        switch_angle_deg: float = 45.0  # switching threshold in degrees
     @dataclass
     class EnergyParams:
         k_energy: float = 10.0          # gain for energy-based controller
-    @dataclass
-    class HybridParams:
-        switch_angle_deg: float = 15.0  # switching threshold in degrees
     
     pd: PDParams
     energy: EnergyParams
-    hybrid: HybridParams
 
 class Controller(BaseCartPoleController):
     def __init__(self, method: str = "pd", params: ControlParams = None, cartpole_params: CartPoleParams = None):
@@ -47,26 +44,10 @@ class Controller(BaseCartPoleController):
             control = self._compute_pd_control(state, dt)
         elif self.method == "energy":
             control = self._compute_energy_control(state)
-        elif self.method == "hybrid":
-            control = self._compute_hybrid_control(state, dt)
         else:
             raise ValueError(f"Unknown control method: {self.method}")
         return np.clip(control, -self.cartpole_params.max_force, self.cartpole_params.max_force)
 
-    def _compute_hybrid_control(self, state: np.ndarray, dt: float) -> float:
-        x, x_dot, theta, theta_dot = state
-        theta = self._wrap_angle(theta)
-        switch_rad = np.radians(self.params.hybrid.switch_angle_deg)
-        if abs(theta) < switch_rad:
-            if self.last_state == 1:  # Switch from energy to PD
-                print("Switching to PD control")
-            self.last_state = 0 
-            return self._compute_pd_control(state, dt)
-        else:
-            if self.last_state == 0:  # Switch from PD to energy
-                print("Switching to energy control")
-            self.last_state = 1
-            return self._compute_energy_control(state)
 
     def _compute_pd_control(self, state: np.ndarray, dt: float) -> float:
         x, x_dot, theta, theta_dot = state
@@ -87,7 +68,7 @@ class Controller(BaseCartPoleController):
         pose_integral = sum(e for e, _ in self.integral_window)
 
         u_theta = sign * (p.k_theta_p * theta + p.k_theta_d * theta_dot)
-        switch_rad = np.radians(self.params.hybrid.switch_angle_deg)
+        switch_rad = np.radians(p.switch_angle_deg)
         if abs(theta) < switch_rad:
             u_x = -p.k_x_p*x -p.k_x_d*x_dot -p.k_x_i*pose_integral
             self.integral_window.append((-x * dt, dt))

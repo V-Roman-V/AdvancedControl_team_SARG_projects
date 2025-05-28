@@ -78,7 +78,7 @@ class CartPoleVisualizer:
         x, _, theta, _ = state
         self.state_trace_x.append(x)
         self.state_trace_u.append(control)
-        self.state_trace_theta.append(theta)
+        self.state_trace_theta.append(self.cartpole_params.l * np.sin(theta))
         self.state_trace_time.append(t)
 
         if self.mode in ['realtime', 'gif']:
