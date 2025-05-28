@@ -22,10 +22,14 @@ class Simulation:
         self.controller = controller
         self.cartpole = cartpole
 
-    def simulate(self):
+    def simulate(self, wait_time=0.2):
         for frame_idx, t in enumerate(tqdm(self.time)):
             state = self.cartpole.state
-            control = self.controller.compute_control(state, self.dt)
+            
+            control = 0
+            if t > wait_time:
+                control = self.controller.compute_control(state, self.dt)
+                
             self.cartpole.update(control, self.dt)
 
             self.trajectory.append(state.copy())
@@ -38,20 +42,25 @@ class Simulation:
 
 def main():
     #create cartpole instance
-    init_state = np.array([-1, 0.0, 0.1, 0.0])  # Start nearly hanging downward
+    init_state = np.array([-1, 0.0, np.pi/2+0.05, 0.0])  # Start nearly hanging downward
     cartpole = CartPole(init_state)
 
     #create controller instance
-    pd = ControlParams.PDParams(k_theta_p=35000.0, k_theta_d=8000.0, k_theta_i=1, k_theta_i_dur=1.5, k_x_p=150.0, k_x_d=400.0)
+    # pd = ControlParams.PDParams(k_theta_p=35000.0, k_theta_d=8000.0, k_theta_i=1, k_theta_i_dur=1.5, k_x_p=150.0, k_x_d=400.0)
+    # pd = ControlParams.PDParams(k_theta_p=1500.0, k_theta_d=100.0, k_theta_i=100.6, k_theta_i_dur=0.2, k_x_p=0.0, k_x_d=0.0)
+    # pd = ControlParams.PDParams(k_theta_p=0.0, k_theta_d=0.0, k_theta_i=0, k_theta_i_dur=0.0, k_x_p=2000.0, k_x_d=450.0)
+    # pd = ControlParams.PDParams(k_theta_p=1500.0, k_theta_d=100.0, k_theta_i=100, k_theta_i_dur=0.2, k_x_p=1.0, k_x_d=-50.0) # stable
+    pd = ControlParams.PDParams(k_theta_p=300.0, k_theta_d=100.0, k_x_p=1.0, k_x_d=-50.0, k_x_i=100, k_x_i_dur=0.2) # fast stable
     energy = ControlParams.EnergyParams(k_energy=25.0)
     hybrid = ControlParams.HybridParams(switch_angle_deg=45.0)
     params = ControlParams(pd=pd, energy=energy,hybrid=hybrid)
 
-    controller = Controller(method="energy", params=params)
+    controller = Controller(method="pd", params=params)
 
-    sim = Simulation(T=5.0, dt=0.001, frame_numbers=400, mode='gif')
+    sim = Simulation(T=7, dt=0.001, frame_numbers=140, mode='realtime')
     sim.initialize(cartpole, controller)
-    sim.simulate()
+    sim.simulate(wait_time = 1.5)
 
 if __name__ == "__main__":
     main()
+   

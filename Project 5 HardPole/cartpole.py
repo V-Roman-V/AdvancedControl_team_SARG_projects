@@ -7,8 +7,8 @@ class CartPoleParams:
     m_pole: float = 0.1      # mass of the pole
     l: float = 0.5           # half-length of the pole
     g: float = 9.81          # gravity
-    damping: float = 30    # simple friction coefficient
-    rotary_damping: float = 0.3  # pole angular damping
+    damping: float = 10    # simple friction coefficient
+    rotary_damping: float = 0.1  # pole angular damping
     max_force: float = 300.0
 
 class CartPole:

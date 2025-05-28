@@ -16,10 +16,10 @@ class ControlParams:
     class PDParams:
         k_theta_p: float = 40000.0
         k_theta_d: float = 1000.0
-        k_theta_i: float = 1.0
-        k_theta_i_dur: float = 2.0  # integral duration in seconds
         k_x_p: float = 300.0
         k_x_d: float = 150.0
+        k_x_i: float = 1.0
+        k_x_i_dur: float = 2.0  # integral duration in seconds
     @dataclass
     class EnergyParams:
         k_energy: float = 10.0          # gain for energy-based controller
@@ -39,7 +39,7 @@ class Controller(BaseCartPoleController):
         self.method = method.lower()
         self.last_state = 1 
         self.integral_window = deque()
-        self.theta_integral = 0.0
+        self.pose_integral = 0.0
 
     def compute_control(self, state: np.ndarray, dt: float = 0.02) -> float:
         control = 0
@@ -79,22 +79,18 @@ class Controller(BaseCartPoleController):
         total_time = 0.0
         for i in reversed(range(len(self.integral_window))):
             total_time += self.integral_window[i][1]
-            if total_time > self.params.pd.k_theta_i_dur:
+            if total_time > self.params.pd.k_x_i_dur:
                 self.integral_window = deque(list(self.integral_window)[i+1:])
                 break
 
         # Compute the limited integral
-        theta_integral = sum(e for e, _ in self.integral_window)
+        pose_integral = sum(e for e, _ in self.integral_window)
 
-        u_theta = sign * (
-            p.k_theta_p * theta +
-            p.k_theta_d * theta_dot +
-            p.k_theta_i * theta_integral
-        )
+        u_theta = sign * (p.k_theta_p * theta + p.k_theta_d * theta_dot)
         switch_rad = np.radians(self.params.hybrid.switch_angle_deg)
         if abs(theta) < switch_rad:
-            u_x = -p.k_x_p * x - p.k_x_d * x_dot
-            self.integral_window.append(((u_theta - u_x) * dt, dt))
+            u_x = -p.k_x_p*x -p.k_x_d*x_dot -p.k_x_i*pose_integral
+            self.integral_window.append((-x * dt, dt))
             return u_theta + u_x
         else:
             self.integral_window.append((0, dt))

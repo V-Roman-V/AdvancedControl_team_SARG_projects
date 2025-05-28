@@ -60,7 +60,7 @@ class CartPoleVisualizer:
         pole_length = self.cartpole_params.l
 
         self.ax_cp.clear()
-        self.ax_cp.set_xlim(-10, 10)
+        self.ax_cp.set_xlim(-5, 5)
         self.ax_cp.set_ylim(-1.1, 1.4)
         self.ax_cp.set_aspect('equal', adjustable='box')
         self.ax_cp.grid(True)
