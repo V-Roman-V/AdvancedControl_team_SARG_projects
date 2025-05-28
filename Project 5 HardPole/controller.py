@@ -79,13 +79,16 @@ class Controller(BaseCartPoleController):
         g = self.cartpole_params.g
         k_energy = self.params.energy.k_energy
 
+        theta_dot = np.clip(theta_dot, -50.0, 50.0)  # prevent overflow
+
         # Total energy
         KE = 0.5 * m * (l ** 2) * theta_dot ** 2
         PE = -m * g * l * np.cos(theta)
         E = KE + PE
         E_des = -m * g * l
 
-        dE = E - E_des
+        dE = np.clip(E - E_des, -1000, 1000)
         direction = np.sign(theta_dot * np.cos(theta))
+        u = -k_energy * dE * direction
 
-        return -k_energy * dE * direction
+        return u
