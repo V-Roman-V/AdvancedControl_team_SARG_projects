@@ -5,7 +5,8 @@ import imageio
 from cartpole import CartPoleParams
 
 class CartPoleVisualizer:
-    def __init__(self, mode='realtime', cartpole_params: CartPoleParams = None):
+    def __init__(self, mode='realtime', cartpole_params: CartPoleParams = None, label_text: str = ""):
+        self.label_text = label_text
         self.mode = mode
         self.cartpole_params = cartpole_params if cartpole_params else CartPoleParams()
         size_x, size_y = 16, 8
@@ -103,10 +104,20 @@ class CartPoleVisualizer:
             self.fig.canvas.draw()
             self.fig.canvas.flush_events()
 
+            if self.label_text:
+                self.fig.texts.clear()
+                # self.fig.text(0.5, 0.93, self.label_text.upper(),
+                #             fontsize=40, color='gray', ha='center', va='center', alpha=0.65,
+                #             weight='bold', transform=self.fig.transFigure)
+                self.fig.text(0.87, 0.92, self.label_text.upper(),
+                            fontsize=45, color='gray', ha='right', va='top', alpha=0.75,
+                            weight='bold', transform=self.fig.transFigure)
+
             if self.mode == 'gif':
                 width, height = self.fig.canvas.get_width_height()
                 image = np.frombuffer(self.fig.canvas.buffer_rgba(), dtype=np.uint8).reshape((height, width, 4))
                 self.frames.append(image[..., :3].copy())
+
 
         elif self.mode == 'time_plot':
             self.ax_pos.plot(self.state_trace_time, self.state_trace_x, 'r-', lw=1)
@@ -117,13 +128,13 @@ class CartPoleVisualizer:
             self.fig.canvas.draw()
             self.fig.canvas.flush_events()
 
-    def finalize(self, save_path='./cartpole.gif'):
+    def finalize(self, save_path='./', name='cartpole_'):
         if self.mode == 'final':
             plt.ioff()
             plt.show()
         elif self.mode == 'gif' and save_path:
             print("Saving CartPole gif...")
-            imageio.mimsave(save_path, self.frames, fps=20)
+            imageio.mimsave(f"{save_path}{name}{self.label_text}.gif", self.frames, fps=20)
             print(f"Saved gif to: {save_path}")
             self.fig.savefig('cartpole_time_plots.png')
             print("Saved time plots as 'cartpole_time_plots.png'")

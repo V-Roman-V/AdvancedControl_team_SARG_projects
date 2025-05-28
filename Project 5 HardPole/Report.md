@@ -24,6 +24,10 @@ Tuning pd add Integral part to the position and tune koeficient we got realy goo
 
 # Compare with energy
 
-Didnt work
+Up the Pole
 
 ![alt text](gif/cartpole_energy.gif)
+
+# Compare with hybrid (energy + pid)
+
+![alt text](gif/cartpole_hynrid.gif)
