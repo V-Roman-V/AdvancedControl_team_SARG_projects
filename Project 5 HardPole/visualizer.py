@@ -24,7 +24,7 @@ class CartPoleVisualizer:
         self.ax.grid(True)
         self.ax.set_aspect('equal', adjustable='box')
 
-        y_lim = self.cartpole_params.l * 1.1  # Allow some space above the pole tip
+        y_lim = self.cartpole_params.l * 4 # Allow some space above the pole tip
         x_lim = y_lim / size_y * size_x
         self.ax.set_xlim(-x_lim, x_lim)
         self.ax.set_ylim(-y_lim, y_lim)

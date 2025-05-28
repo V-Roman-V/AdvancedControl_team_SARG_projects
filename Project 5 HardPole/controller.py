@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 import numpy as np
 from cartpole import CartPoleParams
+from collections import deque
 
 class BaseCartPoleController:
     def compute_control(self, state: np.ndarray, dt: float) -> float:
@@ -13,10 +14,12 @@ class BaseCartPoleController:
 class ControlParams:
     @dataclass
     class PDParams:
-        k_theta_p: float = 2.0
-        k_theta_d: float = 5.0
-        k_x_p: float = 32.0
-        k_x_d: float = 12.0
+        k_theta_p: float = 40000.0
+        k_theta_d: float = 1000.0
+        k_theta_i: float = 1.0
+        k_theta_i_dur: float = 2.0  # integral duration in seconds
+        k_x_p: float = 300.0
+        k_x_d: float = 150.0
     @dataclass
     class EnergyParams:
         k_energy: float = 10.0          # gain for energy-based controller
@@ -29,12 +32,14 @@ class ControlParams:
     hybrid: HybridParams
 
 class Controller(BaseCartPoleController):
-    def __init__(self, method: str = "hybrid", params: ControlParams = None, cartpole_params: CartPoleParams = None):
+    def __init__(self, method: str = "pd", params: ControlParams = None, cartpole_params: CartPoleParams = None):
         super().__init__()
         self.cartpole_params = cartpole_params if cartpole_params else CartPoleParams()
         self.params = params if params else ControlParams()
         self.method = method.lower()
         self.last_state = 1 
+        self.integral_window = deque()
+        self.theta_integral = 0.0
 
     def compute_control(self, state: np.ndarray, dt: float = 0.02) -> float:
         if self.method == "pd":
@@ -64,11 +69,34 @@ class Controller(BaseCartPoleController):
     def _compute_pd_control(self, state: np.ndarray, dt: float) -> float:
         x, x_dot, theta, theta_dot = state
         theta = self._wrap_angle(theta)
-
         p = self.params.pd
-        u_theta = -p.k_theta_p * theta - p.k_theta_d * theta_dot
-        u_x = -p.k_x_p * x - p.k_x_d * x_dot
-        return u_theta + u_x
+        
+        sign = 1 if np.abs(theta) <= np.pi / 2 else -1
+
+        # Remove old values beyond the window duration
+        total_time = 0.0
+        for i in reversed(range(len(self.integral_window))):
+            total_time += self.integral_window[i][1]
+            if total_time > self.params.pd.k_theta_i_dur:
+                self.integral_window = deque(list(self.integral_window)[i+1:])
+                break
+
+        # Compute the limited integral
+        theta_integral = sum(e for e, _ in self.integral_window)
+
+        u_theta = sign * (
+            p.k_theta_p * theta +
+            p.k_theta_d * theta_dot +
+            p.k_theta_i * theta_integral
+        )
+        switch_rad = np.radians(self.params.hybrid.switch_angle_deg)
+        if abs(theta) < switch_rad:
+            u_x = -p.k_x_p * x - p.k_x_d * x_dot
+            self.integral_window.append(((u_theta - u_x) * dt, dt))
+            return u_theta + u_x
+        else:
+            self.integral_window.append((0, dt))
+        return u_theta
 
     def _compute_energy_control(self, state: np.ndarray) -> float:
         _, _, theta, theta_dot = state
@@ -78,17 +106,15 @@ class Controller(BaseCartPoleController):
         l = self.cartpole_params.l
         g = self.cartpole_params.g
         k_energy = self.params.energy.k_energy
-
-        theta_dot = np.clip(theta_dot, -50.0, 50.0)  # prevent overflow
-
-        # Total energy
+        # Compute total mechanical energy relative to upright
         KE = 0.5 * m * (l ** 2) * theta_dot ** 2
-        PE = -m * g * l * np.cos(theta)
+        PE = m * g * l * (1 - np.cos(theta))  # 0 when upright
         E = KE + PE
-        E_des = -m * g * l
+        E_des = 0.0
 
-        dE = np.clip(E - E_des, -1000, 1000)
-        direction = np.sign(theta_dot * np.cos(theta))
-        u = -k_energy * dE * direction
-
+        dE = E - E_des
+        direction = np.sign(theta_dot) if abs(theta_dot) > 1e-3 else 1.0  # prevent zero switching
+        u = k_energy * dE * direction
         return u
+
+
