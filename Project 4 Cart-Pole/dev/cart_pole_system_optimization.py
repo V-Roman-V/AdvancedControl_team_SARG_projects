@@ -8,15 +8,6 @@ from tqdm import tqdm
 g = 9.81  # gravitational acceleration
 
 # Initial parameter guess: M, m, l, b_c, f_c, b_p, f_p
-# initial_params = np.array([
-#     4.5,       # M: cart mass (kg)
-#     0.157,     # m: pole mass (kg)
-#     0.205,     # l: pole length (m)
-#     0.6,       # b_c: viscous friction (cart)
-#     0.7,       # f_c: Coulomb friction (cart)
-#     0.0022,     # b_p: viscous friction (pole)
-#     0.0017     # f_p: Coulomb friction (pole)
-# ])
 initial_params = np.array([
     4.5,       # M: cart mass (kg)
     0.210,     # m: pole mass (kg)
