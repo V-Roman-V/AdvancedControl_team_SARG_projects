@@ -25,13 +25,28 @@ initial_params = np.array([
     0.9,       # f_c: Coulomb friction (cart)
     0.0016,    # b_p: viscous friction (pole)
     0.0062,     # f_p: Coulomb friction (pole)
-    3         # f_s: Static force (cart)  
+    100         # K_p: Virtual Force  
 ])
 
 
-def cart_pole_dynamics(state, params, u=0.0):
+# Linear model parameters
+calib_configs_1 = [-0.0014035, -0.2821036] # Params for control < 0
+calib_configs_2 = [-0.00164, 0.334]  # Params for control > 0
+
+def control_to_speed(control):
+    k,b = calib_configs_1 if control < 0 else calib_configs_2
+    speed = k * control + b
+    return max(speed, 0) if control < 0 else min(speed, 0)
+
+def speed_to_control(speed):
+    if abs(speed) < 0.05:  # Deadzone to avoid noise near zero
+        return 0
+    k,b = calib_configs_1 if speed > 0 else calib_configs_2
+    return (speed - b) / k  # Inverse for positive speed
+
+def cart_pole_dynamics(state, params, u_cmd=0.0):
     x, x_dot, theta, theta_dot = state
-    M, m, L, b_c, f_c, b_p, f_p, f_st = params
+    M, m, L, b_c, f_c, b_p, f_p, K_pf = params
 
     # Intermediate terms
     sin_theta = np.sin(theta)
@@ -43,6 +58,9 @@ def cart_pole_dynamics(state, params, u=0.0):
     F_fric = b_c * x_dot + f_c * sgn_x_dot
     T_fric = b_p * theta_dot + f_p * sgn_theta_dot
 
+    # Virtual Force
+    u_f = K_pf * (control_to_speed(u_cmd) - x_dot)
+
     D = M + m
     mlcos = m * L * cos_theta
 
@@ -52,7 +70,7 @@ def cart_pole_dynamics(state, params, u=0.0):
     # Numerator of angular acceleration
     beta = (
         -m * g * L * sin_theta
-        - (mlcos / D) * (u - F_fric + m * L * theta_dot**2 * sin_theta)
+        - (mlcos / D) * (-M*u_f + F_fric + m * L * theta_dot**2 * sin_theta)
         - T_fric
     )
 
@@ -60,25 +78,20 @@ def cart_pole_dynamics(state, params, u=0.0):
     theta_ddot = beta / alpha
 
     # Linear acceleration
-    x_ddot = (1 / D) * (
-        u - F_fric - mlcos * theta_ddot + m * L * theta_dot**2 * sin_theta
-    )
+    pole_force = mlcos * theta_ddot - m * L * theta_dot**2 * sin_theta
+    x_ddot = u_f + pole_force / 100
 
-    cart_force = M * abs(x_ddot)
-    if cart_force < f_st:
-        x_dot = 0
-
-    return np.array([-x_dot, x_ddot, theta_dot, theta_ddot])
+    return np.array([x_dot, x_ddot, theta_dot, theta_ddot])
 
 
 
-def simulate_cart_pole(init_state, params, dt, steps):
+def simulate_cart_pole(init_state, params, dt, steps, control):
     time = np.linspace(0, dt*steps, num=steps, endpoint=False)
     print(f"{time[:5] = } {time[-5: ]= }")
     state_array = [init_state]
-    for _ in tqdm(time[1:]):
+    for u_cmd in tqdm(control[1:]):
         cur_state = state_array[-1]
-        deriv = cart_pole_dynamics(cur_state, params)
+        deriv = cart_pole_dynamics(cur_state, params, u_cmd)
         new_state = cur_state + deriv*dt
         state_array.append(new_state)
     return time, np.array(state_array)
@@ -122,7 +135,7 @@ def load_data(filename):
 
     states = np.array([cart_m, cart_speed, pole_rad, pole_speed]).T
     derives = np.array([cart_speed, pole_speed, cart_accel, pole_accel]).T
-    return dt, states, derives
+    return dt, states, derives, control
 
 def plot_state_comparising(time, state_data, state_sim):
     d_cart_m, d_cart_speed, d_pole_rad, d_pole_speed = state_data.T
@@ -162,10 +175,11 @@ def plot_state_comparising(time, state_data, state_sim):
     plt.show()
 
 # Load data
-dt, state_data, deriv_data = load_data("Project 4 Cart-Pole/recorded_data/record_1748441130.npy")
+# dt, state_data, deriv_data, control = load_data("Project 4 Cart-Pole/recorded_data/record_1748441130.npy")
+dt, state_data, deriv_data, control = load_data("Project 4 Cart-Pole/controlled_data/record_1748458654.npy")
 
 # Simulate initial system
-times, state_sim = simulate_cart_pole(state_data[0], initial_params, dt, len(state_data))
+times, state_sim = simulate_cart_pole(state_data[0], initial_params, dt, len(state_data), control)
 plot_state_comparising(times, state_data, state_sim)
 
 # res = minimize(loss_function, initial_params, args=(state_data, deriv_data), method='L-BFGS-B')

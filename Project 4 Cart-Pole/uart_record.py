@@ -3,6 +3,9 @@ import time
 import numpy as np
 import sys
 import select
+import struct
+
+MAX_VEL = 125  # maximum motor command to avoid overload
 
 # ----- Parser for incoming state -----
 def parse_state_line(line):
@@ -25,6 +28,12 @@ def parse_state_line(line):
         print(f"Error parsing: {e}")
         return None
 
+# ----- UART sender -----
+def send_cart_velocity(ser, velocity):
+    velocity = -int(max(-MAX_VEL, min(MAX_VEL, velocity)))  # clamp to safe bounds
+    ser.write(struct.pack('b', velocity))
+    print(f"Sent: {velocity}")
+
 # ----- Main UART control loop -----
 def main():
     port = '/dev/ttyUSB0'
@@ -44,8 +53,8 @@ def main():
             if line:
                 state = parse_state_line(line)
                 if state:
-                    print(f"[{state['timestamp']}] Δt={state['dt']}us | Cart: {state['cart_m']:.3f} m @ {state['cart_speed']:.3f} m/s | "
-                          f"Pole: {state['pole_rad']:.3f} rad @ {state['pole_speed']:.3f} rad/s | u={state['last_control']}")
+                    # print(f"[{state['timestamp']}] Δt={state['dt']}us | Cart: {state['cart_m']:.3f} m @ {state['cart_speed']:.3f} m/s | "
+                    #       f"Pole: {state['pole_rad']:.3f} rad @ {state['pole_speed']:.3f} rad/s | u={state['last_control']}")
 
                     if recording:
                         recorded_data.append([
@@ -63,9 +72,16 @@ def main():
                 cmd = sys.stdin.readline().strip()
                 if cmd == 'q':
                     break
-                else:
+                elif cmd == '':
                     recording = not recording
                     print(f"{'Started' if recording else 'Stopped'} recording.")
+                else:
+                    try:
+                        speed = int(cmd)
+                        if abs(speed) < MAX_VEL:
+                            send_cart_velocity(ser, speed)
+                    except Exception:
+                        pass 
 
     if recorded_data:
         data_np = np.array(recorded_data)

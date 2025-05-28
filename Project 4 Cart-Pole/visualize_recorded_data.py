@@ -32,6 +32,36 @@ def load_and_plot(filename):
     pole_speed  = fix_pole_velocity(data[:, 5])
     control     = data[:, 6]
 
+    # Get unique control values
+    unique_controls = np.unique(control)
+
+    # Create a figure with subplots
+    fig, axes = plt.subplots(len(unique_controls), 1, figsize=(12, 6*len(unique_controls)))
+
+    # If only one control value, make axes a list for consistency
+    if len(unique_controls) == 1:
+        axes = [axes]
+
+    for ax, control_val in zip(axes, unique_controls):
+        mask = (control == control_val)
+        speeds = cart_speed[mask]
+        time_points = np.arange(len(speeds)) * dt_us[mask][0]  # or use time_us[mask]
+
+        mean_speeds = np.mean(speeds[30:-30]) 
+
+        ax.plot(time_points, speeds)
+        ax.plot([time_points[0], time_points[-1]], [mean_speeds, mean_speeds], 'r--')
+        ax.set_title(f'Control = {control_val:.2f}')
+        ax.set_xlabel('Time (μs)')
+        ax.set_ylabel('Cart Speed')
+        ax.grid(True)
+        print(f"Control_val {control_val}: {mean_speeds}")
+
+
+    plt.tight_layout()
+    plt.show()
+    asdasd
+
     dt = np.mean(dt_us) / 1e6
     cart_accel = savgol_filter(cart_speed, 11, 2, deriv=1, delta=dt)
     pole_accel = savgol_filter(pole_speed, 11, 2, deriv=1, delta=dt)
@@ -127,7 +157,11 @@ def load_data_for_peaks(filename):
     print(f"{filename.split('/')[-1]}: {result}")
 
 if __name__ == "__main__":
-    load_and_plot("Project 4 Cart-Pole/recorded_data/record_1748441081.npy")
-    load_and_plot("Project 4 Cart-Pole/recorded_data/record_1748441130.npy")
-    load_and_plot("Project 4 Cart-Pole/recorded_data/record_1748441174.npy")
-    load_and_plot("Project 4 Cart-Pole/recorded_data/record_1748441220.npy")
+    # load_and_plot("Project 4 Cart-Pole/recorded_data/record_1748441081.npy")
+    # load_and_plot("Project 4 Cart-Pole/recorded_data/record_1748441130.npy")
+    # load_and_plot("Project 4 Cart-Pole/recorded_data/record_1748441174.npy")
+    # load_and_plot("Project 4 Cart-Pole/recorded_data/record_1748441220.npy")
+
+    # load_and_plot("Project 4 Cart-Pole/controlled_data/record_1748458654.npy")
+    # load_and_plot("Project 4 Cart-Pole/controlled_data/record_1748460593.npy")
+    load_and_plot("Project 4 Cart-Pole/controlled_data/record_1748462526.npy")
