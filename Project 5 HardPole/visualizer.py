@@ -106,9 +106,6 @@ class CartPoleVisualizer:
 
             if self.label_text:
                 self.fig.texts.clear()
-                # self.fig.text(0.5, 0.93, self.label_text.upper(),
-                #             fontsize=40, color='gray', ha='center', va='center', alpha=0.65,
-                #             weight='bold', transform=self.fig.transFigure)
                 self.fig.text(0.87, 0.92, self.label_text.upper(),
                             fontsize=45, color='gray', ha='right', va='top', alpha=0.75,
                             weight='bold', transform=self.fig.transFigure)

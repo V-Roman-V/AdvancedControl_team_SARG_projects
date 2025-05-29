@@ -40,6 +40,36 @@ class CartPole:
         x_acc = temp - pole_mass_length * theta_acc * cos_theta / total_mass
 
         return np.array([x_dot, x_acc, theta_dot, theta_acc])
+    
+    @staticmethod
+    def dynamics_batch(params: CartPoleParams, states: np.ndarray, forces: np.ndarray) -> np.ndarray:
+        """
+        Vectorized dynamics for a batch of states and forces.
+        states: shape (N, 4)
+        forces: shape (N,)
+        Returns: shape (N, 4)
+        """
+        x = states[:, 0]
+        x_dot = states[:, 1]
+        theta = states[:, 2]
+        theta_dot = states[:, 3]
+        p = params
+
+        sin_theta = np.sin(theta)
+        cos_theta = np.cos(theta)
+
+        total_mass = p.m_cart + p.m_pole
+        pole_mass_length = p.m_pole * p.l
+
+        temp = (forces + pole_mass_length * theta_dot**2 * sin_theta - p.damping * x_dot) / total_mass
+
+        theta_acc = (p.g * sin_theta - cos_theta * temp - p.rotary_damping * theta_dot) / \
+                    (p.l * (4/3 - p.m_pole * cos_theta**2 / total_mass))
+
+        x_acc = temp - pole_mass_length * theta_acc * cos_theta / total_mass
+
+        derivs = np.stack([x_dot, x_acc, theta_dot, theta_acc], axis=-1)
+        return derivs
 
     def update(self, force: float, dt: float):
         force = np.clip(force, -self.params.max_force, self.params.max_force)

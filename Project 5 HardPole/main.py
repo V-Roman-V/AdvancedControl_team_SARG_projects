@@ -42,25 +42,21 @@ class Simulation:
 
 def main():
     #create cartpole instance
-    # init_state = np.array([-1, 0.0, np.pi+0.05, 0.0])  # Start nearly hanging downward
-    init_state = np.array([-1, 0.0, 1.85, 0.0])  # Start nearly hanging upward
+    init_state = np.array([-1, 0.0, np.pi+0.05, 0.0])  # Start nearly hanging downward
+    # init_state = np.array([-1, 0.0, 0.15, 0.0])  # Start nearly hanging upward
     cartpole = CartPole(init_state)
 
     #create controller instance
-    # pd = ControlParams.PDParams(k_theta_p=35000.0, k_theta_d=8000.0, k_theta_i=1, k_theta_i_dur=1.5, k_x_p=150.0, k_x_d=400.0)
-    # pd = ControlParams.PDParams(k_theta_p=1500.0, k_theta_d=100.0, k_theta_i=100.6, k_theta_i_dur=0.2, k_x_p=0.0, k_x_d=0.0)
-    # pd = ControlParams.PDParams(k_theta_p=0.0, k_theta_d=0.0, k_theta_i=0, k_theta_i_dur=0.0, k_x_p=2000.0, k_x_d=450.0)
-    # pd = ControlParams.PDParams(k_theta_p=1500.0, k_theta_d=100.0, k_theta_i=100, k_theta_i_dur=0.2, k_x_p=1.0, k_x_d=-50.0) # stable
     pd = ControlParams.PDParams(k_theta_p=300.0, k_theta_d=100.0, k_x_p=1.0, k_x_d=-50.0, k_x_i=100, k_x_i_dur=0.2, switch_angle_deg=45.0) # fast stable
     energy = ControlParams.EnergyParams(k_energy=15.0)
     hybrid = ControlParams.HybridParams(switch_angle_deg=45.0)
-    mpc = ControlParams.MPCParams(candidate_force_count=15, horizon_steps=140, weight_theta=25.0, weight_theta_dot=0.01, weight_x=4.0, weight_x_dot=0.01)
-    params = ControlParams(pd=pd, energy=energy,hybrid=hybrid, mpc=mpc)
+    mpc_monte = ControlParams.MPCMonteParams(horizon_seconds=1.5, samples=500, x_limit=2, force_step_part=0.01, weight_theta=10000, weight_x=10.0, weight_theta_dot=0.1, weight_x_dot=0.2)
+    params = ControlParams(pd=pd, energy=energy,hybrid=hybrid, mpc_monte=mpc_monte)
 
-    method = "mpc_simple"  # "pd", "energy", "hybrid"
+    method = "mpc_montecarlo"  # "pd", "energy", "hybrid"
     controller = Controller(method=method, params=params)
 
-    sim = Simulation(T=15, dt=0.001, frame_numbers=100, label_text=method, mode='gif')
+    sim = Simulation(T=10, dt=0.003, frame_numbers=300, label_text=method, mode='gif')
     sim.initialize(cartpole, controller)
     sim.simulate(wait_time = 0.0)
 
