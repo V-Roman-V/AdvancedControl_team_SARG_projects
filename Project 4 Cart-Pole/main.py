@@ -68,8 +68,7 @@ def main():
             if current_action == 0:
                 u_opt = mpc_swing.solve_mpc(state)
             elif current_action == 2:
-                u_opt = mpc_st.solve_mpc(state) 
-                u_opt += 0.01 * state.x
+                u_opt = mpc_st.solve_mpc(state)
             print(f"Optimal Control [{current_action}]:", u_opt, f" dt = {(time.time() - start):.3f}")
 
             # send velocity
