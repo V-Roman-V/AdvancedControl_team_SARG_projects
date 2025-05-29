@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 import numpy as np
-from cartpole import CartPoleParams
+from cartpole import CartPoleParams, CartPole
 from collections import deque
+from scipy.optimize import minimize
 
 class BaseCartPoleController:
     def compute_control(self, state: np.ndarray, dt: float) -> float:
@@ -28,10 +29,19 @@ class ControlParams:
     @dataclass
     class EnergyParams:
         k_energy: float = 10.0          # gain for energy-based controller
-    
+    @dataclass
+    class MPCParams:
+        horizon_steps: int = 20
+        candidate_force_count: int = 9
+        weight_theta: float = 10.0
+        weight_theta_dot: float = 0.1
+        weight_x: float = 1.0
+        weight_x_dot: float = 0.1
+
     pd: PDParams
     energy: EnergyParams
     hybrid: HybridParams
+    mpc: MPCParams
 
 class Controller(BaseCartPoleController):
     def __init__(self, method: str = "pd", params: ControlParams = None, cartpole_params: CartPoleParams = None):
@@ -51,6 +61,8 @@ class Controller(BaseCartPoleController):
             control = self._compute_energy_control(state)
         elif self.method == "hybrid":
             control = self._compute_hybrid_control(state, dt)
+        elif self.method == "mpc_simple":
+            control = self._compute_mpc_simple_control(state, dt)
         else:
             raise ValueError(f"Unknown control method: {self.method}")
         return np.clip(control, -self.cartpole_params.max_force, self.cartpole_params.max_force)
@@ -117,4 +129,72 @@ class Controller(BaseCartPoleController):
         u = k_energy * dE * direction
         return u
 
+    def _compute_mpc_simple_control(self, state: np.ndarray, dt: float = 0.02) -> float:
+        p = self.params.mpc
+        N = p.horizon_steps
+        candidate_us = np.linspace(-self.cartpole_params.max_force,
+                                self.cartpole_params.max_force,
+                                p.candidate_force_count)
+        best_cost = float('inf')
+        best_u = 0.0
 
+        def cost_fn(trajectory):
+            cost = 0.0
+            for s in trajectory:
+                x, x_dot, theta, theta_dot = s
+                theta = self._wrap_angle(theta)
+                cost += (
+                    p.weight_theta * theta**2 +
+                    p.weight_theta_dot * theta_dot**2 +
+                    p.weight_x * x**2 +
+                    p.weight_x_dot * x_dot**2
+                )
+            return cost
+
+        for u in candidate_us:
+            traj = [state.copy()]
+            s = state.copy()
+            for _ in range(N):
+                s_dot = CartPole.dynamics(self.cartpole_params, s, u)
+                s = s + s_dot * dt
+                s[2] = self._wrap_angle(s[2])
+                traj.append(s.copy())
+            cost = cost_fn(traj)
+            if cost < best_cost:
+                best_cost = cost
+                best_u = u
+
+        return best_u
+    
+    def _compute_mpc_control(self, state: np.ndarray, dt: float = 0.02) -> float:
+        p = self.params.mpc
+        max_f = self.cartpole_params.max_force
+        horizon = p.horizon_steps
+
+        def trajectory_cost(u_scalar):
+            u = float(u_scalar[0])
+            s = state.copy()
+            total_cost = 0.0
+            for _ in range(horizon):
+                s_dot = CartPole(state=s, params=self.cartpole_params).dynamics(s, u)
+                s = s + dt * s_dot
+                s[2] = self._wrap_angle(s[2])
+                x, x_dot, theta, theta_dot = s
+                total_cost += (
+                    p.weight_theta * theta**2 +
+                    p.weight_theta_dot * theta_dot**2 +
+                    p.weight_x * x**2 +
+                    p.weight_x_dot * x_dot**2
+                )
+            return total_cost
+
+        res = minimize(
+            trajectory_cost,
+            x0=[0.0],
+            method='L-BFGS-B',
+            bounds=[(-max_f, max_f)],
+            options={'maxiter': 20}
+        )
+
+        optimal_u = float(res.x[0])
+        return np.clip(optimal_u, -max_f, max_f)

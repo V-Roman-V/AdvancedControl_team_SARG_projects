@@ -16,14 +16,15 @@ class CartPole:
         self.state = init_state.astype(np.float64)
         self.params = params if params else CartPoleParams()
 
-    def dynamics(self, state: np.ndarray, force: float) -> np.ndarray:
+    @staticmethod
+    def dynamics(params: CartPoleParams, state: np.ndarray, force: float) -> np.ndarray:
         """
         State-space form:
             state = [x, x_dot, theta, theta_dot]
             state_dot = [x_dot, x_ddot, theta_dot, theta_ddot]
         """
         x, x_dot, theta, theta_dot = state
-        p = self.params
+        p = params
 
         sin_theta = np.sin(theta)
         cos_theta = np.cos(theta)
@@ -42,6 +43,6 @@ class CartPole:
 
     def update(self, force: float, dt: float):
         force = np.clip(force, -self.params.max_force, self.params.max_force)
-        derivs = self.dynamics(self.state, force)
+        derivs = self.dynamics(self.params, self.state, force)
         self.state += derivs * dt
         self.state[2] = (self.state[2] + np.pi) % (2 * np.pi) - np.pi  # wrap theta ∈ [-π, π]

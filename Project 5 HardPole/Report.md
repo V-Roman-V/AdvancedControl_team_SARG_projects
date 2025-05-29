@@ -31,3 +31,8 @@ Up the Pole
 # Compare with hybrid (energy + pid)
 
 ![alt text](gif/cartpole_hynrid.gif)
+
+
+# Compare MPC_Simple (in descrete form)
+
+![alt text](gif/cartpole_mpc_simple.gif)

@@ -42,7 +42,8 @@ class Simulation:
 
 def main():
     #create cartpole instance
-    init_state = np.array([-1, 0.0, np.pi+0.05, 0.0])  # Start nearly hanging downward
+    # init_state = np.array([-1, 0.0, np.pi+0.05, 0.0])  # Start nearly hanging downward
+    init_state = np.array([-1, 0.0, 1.85, 0.0])  # Start nearly hanging upward
     cartpole = CartPole(init_state)
 
     #create controller instance
@@ -50,17 +51,18 @@ def main():
     # pd = ControlParams.PDParams(k_theta_p=1500.0, k_theta_d=100.0, k_theta_i=100.6, k_theta_i_dur=0.2, k_x_p=0.0, k_x_d=0.0)
     # pd = ControlParams.PDParams(k_theta_p=0.0, k_theta_d=0.0, k_theta_i=0, k_theta_i_dur=0.0, k_x_p=2000.0, k_x_d=450.0)
     # pd = ControlParams.PDParams(k_theta_p=1500.0, k_theta_d=100.0, k_theta_i=100, k_theta_i_dur=0.2, k_x_p=1.0, k_x_d=-50.0) # stable
-    pd = ControlParams.PDParams(k_theta_p=300.0, k_theta_d=100.0, k_x_p=1.0, k_x_d=-50.0, k_x_i=100, k_x_i_dur=0.2) # fast stable
+    pd = ControlParams.PDParams(k_theta_p=300.0, k_theta_d=100.0, k_x_p=1.0, k_x_d=-50.0, k_x_i=100, k_x_i_dur=0.2, switch_angle_deg=45.0) # fast stable
     energy = ControlParams.EnergyParams(k_energy=15.0)
     hybrid = ControlParams.HybridParams(switch_angle_deg=45.0)
-    params = ControlParams(pd=pd, energy=energy,hybrid=hybrid)
+    mpc = ControlParams.MPCParams(candidate_force_count=15, horizon_steps=140, weight_theta=25.0, weight_theta_dot=0.01, weight_x=4.0, weight_x_dot=0.01)
+    params = ControlParams(pd=pd, energy=energy,hybrid=hybrid, mpc=mpc)
 
-    method = "pd"  # "pd", "energy", "hybrid"
+    method = "mpc_simple"  # "pd", "energy", "hybrid"
     controller = Controller(method=method, params=params)
 
-    sim = Simulation(T=6, dt=0.001, frame_numbers=120, label_text="PID", mode='gif')
+    sim = Simulation(T=15, dt=0.001, frame_numbers=100, label_text=method, mode='gif')
     sim.initialize(cartpole, controller)
-    sim.simulate(wait_time = 1.0)
+    sim.simulate(wait_time = 0.0)
 
 if __name__ == "__main__":
     main()
