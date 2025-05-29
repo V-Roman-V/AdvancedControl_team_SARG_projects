@@ -1,18 +1,38 @@
-import serial
 import time
-import struct
 import numpy as np
-import sys
-import select
 
 from UART import UART
+from cart_pole import State, CartPole
+from converter import control_to_speed, speed_to_control
+from MPC_controller import NMPCController
 
 def main():
+    cartpole = CartPole()
     uart = UART()
+    mpc = NMPCController(cartpole, horizon=10, dt=0.007)
+
     while True:
+        # read state
         state = uart.wait_until_state()
-        print(f"[{state['timestamp']}] Δt={state['dt']:.3f}s | Cart: {state['cart_m']:.3f} m @ {state['cart_speed']:.3f} m/s | "f"Pole: {state['pole_rad']:.3f} rad @ {state['pole_speed']:.3f} rad/s | u={state['last_control']}")
-        uart.send_cart_velocity(state['cart_speed'], verbose=True)
+        print("     ",state)
+
+        # Safety
+        if abs(state.x) > 0.25:
+            uart.send_cart_velocity(0)
+            print(f"Reach border", state)
+            break 
+
+        # MPC control
+        try:
+            u_opt = mpc.compute_control(state)
+            print("Optimal Control:", u_opt)
+        except Exception as e:
+            uart.send_cart_velocity(0)
+            print(f"Error inside MPC: {e}")
+            break 
+
+        # send velocity
+        uart.send_cart_velocity( u_opt, verbose=True)
 
 if __name__ == "__main__":
     main()
