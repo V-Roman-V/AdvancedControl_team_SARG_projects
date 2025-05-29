@@ -70,7 +70,7 @@ class UART:
 
     def _send_cart_control(self, control, verbose=False):
         MAX_CTRL = 127
-        scale_control = 0.2 # parameter inside STM
+        scale_control = 0.1 # parameter inside STM
         control = int(max(-MAX_CTRL, min(MAX_CTRL, control*scale_control)))  # clamp to one byte
         self.ser.write(struct.pack('b', control))
         if verbose:

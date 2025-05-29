@@ -75,8 +75,8 @@ def main():
                 print(f"[{state['timestamp']}] Δt={state['dt']}us | Cart: {state['cart_m']:.3f} m @ {state['cart_speed']:.3f} m/s | "
                       f"Pole: {state['pole_rad']:.3f} rad @ {state['pole_speed']:.3f} rad/s | u={state['last_control']}")
 
-                control = speed_to_control(state['cart_speed'])
-                send_cart_velocity(ser, control)
+                # control = speed_to_control(state['cart_speed'])
+                # send_cart_velocity(ser, control)
 
             # Check for user input (poll every loop)
             if sys.stdin in select.select([sys.stdin], [], [], 0)[0]:

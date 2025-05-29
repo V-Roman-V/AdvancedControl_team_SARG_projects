@@ -40,17 +40,17 @@ class CartPole:
     def __init__(self):
         self.params = np.array([
             4.5,       # M: cart mass (kg)
-            0.210,     # m: pole mass (kg)
-            0.196,     # l: pole length (m)
+            0.300,     # m: pole mass (kg)
+            0.227,     # l: pole length (m)
             0.8,       # b_c: viscous friction (cart)
             0.9,       # f_c: Coulomb friction (cart)
-            0.0016,    # b_p: viscous friction (pole)
-            0.0062,    # f_p: Coulomb friction (pole)
+            0.0028,    # b_p: viscous friction (pole)
+            0.0095,    # f_p: Coulomb friction (pole)
             100        # K_p: Virtual Force  
         ])
 
     def get_dynamic(self, state: State, u_speed=0.0):
-        _t, _dt, _x, x_dot, theta, theta_dot, _last_ctrl = state.to_list()
+        x_dot, theta, theta_dot = state.x_dot, state.theta, state.theta_dot
         g = self.g
         M, m, L, b_c, f_c, b_p, f_p, K_pf = self.params
 

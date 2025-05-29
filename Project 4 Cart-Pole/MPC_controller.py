@@ -1,76 +1,63 @@
-import casadi as ca
 import numpy as np
+from scipy.optimize import minimize
 from cart_pole import CartPole, State
 
-class NMPCController:
-    def __init__(self, cartpole: CartPole, horizon=50, dt=0.007):
-        self.dt, self.N = dt, horizon
-        self.model = cartpole
+def short_state_to_State(X, dt) -> State:
+    return State(
+        timestamp=0,
+        dt = dt,
+        x=X[0],
+        x_dot=X[1],
+        theta=X[2],
+        theta_dot=X[3],
+        old_ctrl=0,
+    )
 
-        # 1) build symbolic dynamics once
-        self._build_casadi_dynamics()
+class NMPCControllerSC:
+    def __init__(self, cartpole: CartPole, horizon=10, dt=0.007, num_iterations=100, u_lim=(-0.6, 0.6)):
+        self.cartpole = cartpole
+        self.horizon  = horizon
+        self.dt       = dt
+        self.u_lim    = u_lim
+        self.num_iterations = num_iterations
+        self.costs   = [1, 8, 0.7]  # [position, angle, effort]
 
-        # 2) set up Opti
-        self.opti = ca.Opti()
-        nx, nu = 4, 1
-        X = self.opti.variable(nx, self.N+1)
-        U = self.opti.variable(nu, self.N)
-        X0 = self.opti.parameter(nx)
-        # bounds
-        self.opti.subject_to(self.opti.bounded(-0.65, U, 0.65))
-        # dynamics constraints
-        for k in range(self.N):
-            xk = X[:,k]; uk = U[:,k]
-            x_next = xk + self.f_casadi(xk, uk)*self.dt
-            self.opti.subject_to(X[:,k+1] == x_next)
-        # init
-        self.opti.subject_to(X[:,0] == X0)
-        # cost (as before)…
-        Q = np.diag([1,0.1,10,0.1]); R = 0.01
-        cost = 0
-        for k in range(self.N):
-            dx = X[:,k] - ca.vertcat(0,0,ca.pi,0)
-            cost += dx.T@Q@dx + R*(U[:,k]**2)
-        cost += 100*(X[2,self.N]-ca.pi)**2
-        self.opti.minimize(cost)
-        self.opti.solver('ipopt', {"ipopt.max_iter":200, "ipopt.print_level":0})
+        # a single State instance we’ll overwrite each step
+        self._state = State(timestamp=0, dt=dt, x=0, x_dot=0, theta=0, theta_dot=0, old_ctrl=0)
 
-        self.X, self.U, self.X0 = X, U, X0
+    def _total_cost(self, u_seq, init_state: State):
+        s = np.array([init_state.x, init_state.x_dot, init_state.theta, init_state.theta_dot])
+        total = 0.0
+        c0, c1, c2 = self.costs
 
-    def _build_casadi_dynamics(self):
-        # grab params and make CasADi constants
-        p = self.model.params
-        M, m, L = [ca.DM(p[i]) for i in (0,1,2)]
-        b_c, f_c = ca.DM(p[3]), ca.DM(p[4])
-        b_p, f_p = ca.DM(p[5]), ca.DM(p[6])
-        K_pf = ca.DM(p[7])
-        g = self.model.g
+        for u in u_seq:
+            # update our scratch-State and compute derivatives
+            self._state.x,      self._state.x_dot      = s[0], s[1]
+            self._state.theta,  self._state.theta_dot  = s[2], s[3]
+            ds = self.cartpole.get_dynamic(self._state, u)
+            # Euler step
+            s = s + ds * self.dt
 
-        x = ca.SX.sym('x',4); u = ca.SX.sym('u',1)
-        # states: x[0]=x, x[1]=x_dot, x[2]=theta, x[3]=theta_dot
-        s, c = ca.sin(x[2]), ca.cos(x[2])
-        s_xdot, s_tdot = ca.sign(x[1]), ca.sign(x[3])
+            # incremental cost
+            total += c0*(s[0]    )**2 \
+                   + c1*(s[2]-np.pi)**2 \
+                   + c2*(u       )**2
+        return total
 
-        F_fric = b_c*x[1] + f_c*s_xdot
-        T_fric = b_p*x[3] + f_p*s_tdot
-        u_f = K_pf*(u - x[1])
+    def solve_mpc(self, current_state: State):
+        # initial guess & bounds
+        u0     = np.zeros(self.horizon)
+        bounds = [self.u_lim]*self.horizon
 
-        D = M + m
-        mlc = m*L*c
-        alpha = m*L**2 - (mlc**2)/D
-        beta = -m*g*L*s \
-               - (mlc/D)*(-M*u_f + F_fric + m*L*(x[1]**2)*s) \
-               - T_fric
+        # wrap objective so scipy sees only one argument
+        obj = lambda u: self._total_cost(u, current_state)
 
-        theta_dd = beta/alpha
-        pole_force = mlc*theta_dd - m*L*(x[1]**2)*s
-        x_dd = u_f + pole_force/100
+        res = minimize(obj, u0,
+                       method='L-BFGS-B',
+                       bounds=bounds,
+                       options={'maxiter': self.num_iterations})
+        print(f"final sequence: {res.x}")
+        # return first control
+        return float(res.x[0])
 
-        f = ca.vertcat(x[1], x_dd, x[3], theta_dd)
-        self.f_casadi = ca.Function('f_casadi', [x,u], [f])
 
-    def compute_control(self, state: State):
-        x0 = np.array([state.x, state.x_dot, state.theta, state.theta_dot])
-        self.opti.set_value(self.X0, x0)
-        sol = self.opti.solve()
-        return float(sol.value(self.U[:,0]))

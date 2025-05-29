@@ -10,12 +10,12 @@ g = 9.81  # gravitational acceleration
 # Initial parameter guess: M, m, l, b_c, f_c, b_p, f_p
 initial_params = np.array([
     4.5,       # M: cart mass (kg)
-    0.210,     # m: pole mass (kg)
-    0.196,     # l: pole length (m)
+    0.300,     # m: pole mass (kg)
+    0.227,     # l: pole length (m)
     0.8,       # b_c: viscous friction (cart)
     0.9,       # f_c: Coulomb friction (cart)
-    0.0016,    # b_p: viscous friction (pole)
-    0.0062,     # f_p: Coulomb friction (pole)
+    0.0028,    # b_p: viscous friction (pole)
+    0.0095,     # f_p: Coulomb friction (pole)
     100         # K_p: Virtual Force  
 ])
 
@@ -167,7 +167,7 @@ def plot_state_comparising(time, state_data, state_sim):
 
 # Load data
 # dt, state_data, deriv_data, control = load_data("Project 4 Cart-Pole/recorded_data/record_1748441130.npy")
-dt, state_data, deriv_data, control = load_data("Project 4 Cart-Pole/controlled_data/record_1748458654.npy")
+dt, state_data, deriv_data, control = load_data("Project 4 Cart-Pole/new_recorded_data/record_1748487383.npy")
 
 # Simulate initial system
 times, state_sim = simulate_cart_pole(state_data[0], initial_params, dt, len(state_data), control)
