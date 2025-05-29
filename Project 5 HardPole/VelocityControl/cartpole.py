@@ -120,7 +120,7 @@ class CartPole:
 
         theta_ddot = beta / alpha
         pole_force = mlcos * theta_ddot - m * L * theta_dot**2 * sin_theta
-        x_ddot = u_f + pole_force / 100
+        x_ddot = u_f + pole_force / D
 
         derivs = np.stack([x_dot, x_ddot, theta_dot, theta_ddot], axis=-1)
         return derivs

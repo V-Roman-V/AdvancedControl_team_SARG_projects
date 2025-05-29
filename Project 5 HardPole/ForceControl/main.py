@@ -47,16 +47,16 @@ def main():
     cartpole = CartPole(init_state)
 
     #create controller instance
-    pd = ControlParams.PDParams(k_theta_p=300.0, k_theta_d=100.0, k_x_p=1.0, k_x_d=-50.0, k_x_i=100, k_x_i_dur=0.2, switch_angle_deg=45.0) # fast stable
-    energy = ControlParams.EnergyParams(k_energy=15.0)
+    pd = ControlParams.PDParams(k_theta_p=300.0, k_theta_d=100.0, k_x_p=10.0, k_x_d=-40.0, k_x_i=100, k_x_i_dur=0.1, switch_angle_deg=45.0) # fast stable
+    energy = ControlParams.EnergyParams(k_energy=20.0)
     hybrid = ControlParams.HybridParams(switch_angle_deg=45.0)
-    mpc_monte = ControlParams.MPCMonteParams(horizon_seconds=0.45, samples=550, x_limit=0.5, force_step_part=0.03, weight_theta=15000, weight_x=15.0, weight_theta_dot=1.5, weight_x_dot=0.0)
+    mpc_monte = ControlParams.MPCMonteParams(horizon_seconds=0.75, samples=10050, x_limit=0.5, force_step_part=0.03, weight_theta=15000, weight_x=15.0, weight_theta_dot=4.0, weight_x_dot=0.0)
     params = ControlParams(pd=pd, energy=energy,hybrid=hybrid, mpc_monte=mpc_monte)
 
-    method = "mpc_montecarlo"  # "pd", "energy", "hybrid"
+    method = "mpc_montecarlo"  # "pd", "energy", "hybrid", "mpc_montecarlo"
     controller = Controller(method=method, params=params)
 
-    sim = Simulation(T=10, dt=0.007, frame_numbers=200, label_text=method, mode='gif')
+    sim = Simulation(T=20, dt=0.07, frame_numbers=200, label_text=method, mode='realtime')
     sim.initialize(cartpole, controller)
     sim.simulate(wait_time = 0.0)
 
