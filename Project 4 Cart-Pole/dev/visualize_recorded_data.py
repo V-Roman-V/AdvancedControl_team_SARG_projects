@@ -32,35 +32,44 @@ def load_and_plot(filename):
     pole_speed  = fix_pole_velocity(data[:, 5])
     control     = data[:, 6]
 
-    # Get unique control values
-    unique_controls = np.unique(control)
+    # # Get unique control values
+    # unique_controls = np.unique(control)
 
-    # Create a figure with subplots
-    fig, axes = plt.subplots(len(unique_controls), 1, figsize=(12, 6*len(unique_controls)))
+    # # Create a figure with subplots
+    # fig, axes = plt.subplots(len(unique_controls), 1, figsize=(12, 6*len(unique_controls)))
 
-    # If only one control value, make axes a list for consistency
-    if len(unique_controls) == 1:
-        axes = [axes]
+    # # If only one control value, make axes a list for consistency
+    # if len(unique_controls) == 1:
+    #     axes = [axes]
 
-    for ax, control_val in zip(axes, unique_controls):
-        mask = (control == control_val)
-        speeds = cart_speed[mask]
-        time_points = np.arange(len(speeds)) * dt_us[mask][0]  # or use time_us[mask]
+    # for ax, control_val in zip(axes, unique_controls):
+    #     mask = (control == control_val)
+    #     speeds = cart_speed[mask]
+    #     time_points = np.arange(len(speeds)) * dt_us[mask][0]  # or use time_us[mask]
 
-        mean_speeds = np.mean(speeds[30:-30]) 
+    #     mean_speeds = np.mean(speeds[30:-30]) 
 
-        ax.plot(time_points, speeds)
-        ax.plot([time_points[0], time_points[-1]], [mean_speeds, mean_speeds], 'r--')
-        ax.set_title(f'Control = {control_val:.2f}')
-        ax.set_xlabel('Time (μs)')
-        ax.set_ylabel('Cart Speed')
-        ax.grid(True)
-        print(f"Control_val {control_val}: {mean_speeds}")
+    #     ax.plot(time_points, speeds)
+    #     ax.plot([time_points[0], time_points[-1]], [mean_speeds, mean_speeds], 'r--')
+    #     ax.set_title(f'Control = {control_val:.2f}')
+    #     ax.set_xlabel('Time (μs)')
+    #     ax.set_ylabel('Cart Speed')
+    #     ax.grid(True)
+    #     print(f"Control_val {control_val}: {mean_speeds}")
 
 
-    plt.tight_layout()
-    plt.show()
-    asdasd
+    # plt.tight_layout()
+    # plt.show()
+    # asdasd
+
+    energy = []
+    for i in range(len(cart_speed)):
+        L = 0.227
+        g = 9.81
+        m = 0.3
+        pot_energy =  0.5 * m * L**2 * pole_speed[i]**2
+        kin_energy =  m * g * L * (1 - np.cos(pole_rad[i]))
+        energy.append(pot_energy + kin_energy)
 
     dt = np.mean(dt_us) / 1e6
     cart_accel = savgol_filter(cart_speed, 11, 2, deriv=1, delta=dt)
@@ -91,7 +100,7 @@ def load_and_plot(filename):
 
     axs[1].plot(time, pole_rad, label='Pole Angle (rad)')
     axs[1].plot(time, pole_speed, label='Pole Speed (rad/s)', linestyle='--')
-    axs[1].plot(time, pole_accel, label='Pole Accel (rad/s^2)', linestyle='--')
+    axs[1].plot(time, energy, label='Energy', linestyle='--')
     axs[1].legend()
     axs[1].set_ylabel("Pole")
 
@@ -164,4 +173,4 @@ if __name__ == "__main__":
 
     # load_and_plot("Project 4 Cart-Pole/controlled_data/record_1748458654.npy")
     # load_and_plot("Project 4 Cart-Pole/controlled_data/record_1748460593.npy")
-    load_and_plot("Project 4 Cart-Pole/controlled_data/record_1748462526.npy")
+    load_and_plot("Project 4 Cart-Pole/new_recorded_data/record_1748487383.npy")
