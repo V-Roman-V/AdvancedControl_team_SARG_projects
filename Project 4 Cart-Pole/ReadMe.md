@@ -31,15 +31,15 @@ To account for real friction, we added viscouse and coulomb friction to the math
 
 * **Viscous friction** is proportional to velocity:
 
-  $$
-  F_{\text{viscous}} = -b \cdot \dot{x}
-  $$
+$$
+F_{\text{viscous}} = -b \cdot \dot{x}
+$$
 
 * **Coulomb friction** is a constant opposing motion direction:
 
-  $$
-  F_{\text{Coulomb}} = -f \cdot \mathrm{sign}(\dot{x})
-  $$
+$$
+F_{\text{Coulomb}} = -f \cdot \mathrm{sign}(\dot{x})
+$$
 
 ### Final equations of motion:
 
@@ -99,8 +99,7 @@ Estimating of the friction:
 <img src="images/free-fall.jpg" alt="text" style="width:100%;">
 
 
-That even works with 
-<img src="images/free-fall.jpg" alt="text" style="width:100%;">
+That even works with control
 
 <img src="images/prediction_with_control.jpg" alt="text" style="width:100%;">
 
