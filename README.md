@@ -29,3 +29,18 @@ Group repository for projects on the Advanced Control course
 
 ![cosine wind](<Project 3 Boat/simulator/gif/cosine_wind.gif>)
 ![hard perling wind](<Project 3 Boat/simulator/gif/Hard_wind_with_big_sway_coeff.gif>)
+
+## Project 4: Hardware Cart-Pole controlled by MPC:
+
+
+### Swing-up:
+
+![alt text](<Project 4 Cart-Pole/images/Swing-up.gif>)
+
+### Stabilization:
+
+![alt text](<Project 4 Cart-Pole/images/Stabilize.gif>)
+
+### Final (Combination of two control)
+
+![alt text](<Project 4 Cart-Pole/images/final.gif>)

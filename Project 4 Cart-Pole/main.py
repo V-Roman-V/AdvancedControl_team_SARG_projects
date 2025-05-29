@@ -21,7 +21,7 @@ def main():
         print("     ",state)
 
     # Parameters
-    Thetha_shift = -0.01      # shift thetha value
+    Thetha_shift = 0.00     # shift thetha value
     Energy_swing_shift = 0.05 # shifts maximum energy condition
     Waiting_angle_rad = 0.16  # if inside this area we stabilize
     # ----
@@ -56,11 +56,11 @@ def main():
             theta_up_cond = abs(state.theta - np.pi) < Waiting_angle_rad
 
             if not high_energy_cond and not theta_up_cond:
-                current_action = 0
+                current_action = 0 # Swing-up
             elif high_energy_cond and not theta_up_cond:
-                current_action = 1
+                current_action = 1 # Waiting
             elif theta_up_cond:
-                current_action = 2
+                current_action = 2 # Stabilazing
 
             # MPC control
             start = time.time()
@@ -69,6 +69,8 @@ def main():
                 u_opt = mpc_swing.solve_mpc(state)
             elif current_action == 2:
                 u_opt = mpc_st.solve_mpc(state)
+                u_opt += 0.4 * state.x
+
             print(f"Optimal Control [{current_action}]:", u_opt, f" dt = {(time.time() - start):.3f}")
 
             # send velocity
